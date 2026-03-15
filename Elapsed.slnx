@@ -1,3 +1,10 @@
 <Solution>
-  <Project Path="src/Riverside.Elapsed/Riverside.Elapsed.csproj" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/app/">
+    <Project Path="src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj" />
+  </Folder>
+  <Folder Name="/src/core/">
+    <Project Path="src/core/Riverside.Elapsed/Riverside.Elapsed.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
 </Solution>
