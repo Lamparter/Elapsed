@@ -1,0 +1,43 @@
+<Project>
+	<PropertyGroup>
+		<Title>$(Product)</Title>
+		<Authors>Lamparter, ascpixi, Hackclub</Authors>
+		<Copyright>Copyright (c) 2026 Lamparter</Copyright>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/Lamparter/Elapsed</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>lapse; timelapse; elapsed; uno; unoplatform; windows; android; linux; macos; iphone; hackclub; riverside</PackageTags>
+		<Description>"Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hackclub's timelapse tracking tool</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+
+		<PackageIcon>PackageLogo.png</PackageIcon>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.201" PrivateAssets="All"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(SourceDirectory)\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(BuildDirectory)\PackageLogo.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+</Project>

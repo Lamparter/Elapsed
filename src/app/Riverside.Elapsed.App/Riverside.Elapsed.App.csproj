@@ -1,0 +1,38 @@
+﻿<Project Sdk="Uno.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-desktop</TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<UnoSingleProject>true</UnoSingleProject>
+
+		<!--
+			UnoFeatures are used to quickly add and manage features enabled for your app.
+			https://aka.platform.uno/singleproject-features
+		-->
+		<UnoFeatures>
+			Lottie;
+			Hosting;
+			Toolkit;
+			Logging;
+			LoggingSerilog;
+			Mvvm;
+			Configuration;
+			HttpKiota;
+			Serialization;
+			Localization;
+			Authentication;
+			Navigation;
+			ThemeService;
+			SkiaRenderer;
+		</UnoFeatures>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Presentation\" />
+	</ItemGroup>
+
+</Project>

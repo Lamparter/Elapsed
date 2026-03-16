@@ -1,10 +1,18 @@
 <Solution>
-  <Folder Name="/src/" />
-  <Folder Name="/src/app/">
-    <Project Path="src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj" />
-  </Folder>
-  <Folder Name="/src/core/">
-    <Project Path="src/core/Riverside.Elapsed/Riverside.Elapsed.csproj" />
-  </Folder>
-  <Folder Name="/tests/" />
+	<Folder Name="/eng/">
+		<File Path="eng/AdditionalFiles.props" />
+		<File Path="eng/CurrentVersion.props" />
+		<File Path="eng/PackageMetadata.props" />
+	</Folder>
+	<Folder Name="/src/" />
+	<Folder Name="/src/app/">
+		<Project Path="src/app/Riverside.Elapsed.App/Riverside.Elapsed.App.csproj">
+			<Deploy Solution="Debug|*" />
+		</Project>
+		<Project Path="src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj" />
+	</Folder>
+	<Folder Name="/src/core/">
+		<Project Path="src/core/Riverside.Elapsed/Riverside.Elapsed.csproj" />
+	</Folder>
+	<Folder Name="/tests/" />
 </Solution>

@@ -1,0 +1,21 @@
+<!--
+READ ME BEFORE MODIFYING THIS FILE:
+	This file is used to track the version of the project online.
+	The version is automatically bumped by the CD action.
+	You can bump the version here and the project will be automatically published online.
+GUIDE TO VERSIONING PRACTICES:
+	You should bump the major version when major, breaking changes are introduced.
+	You should bump the minor version when multiple features or bugs fixes are introduced.
+	You should bump the release level (and beta version) the most frequently, as soon as new changes are introduced.
+	The release level should be a value such as "alpha", "beta", "preview", "rc" or "final".
+	Note that a release level value of "final" will hide the version suffix.
+	With this system, the version should be formatted as "2.1.260316-rc3" or similar.
+-->
+<Project>
+	<PropertyGroup>
+		<MajorVersion>0</MajorVersion>
+		<MinorVersion>1</MinorVersion>
+		<ReleaseLevel>final</ReleaseLevel>
+		<BetaVersion Condition="'$(ReleaseLevel)' !='final'">0</BetaVersion>
+	</PropertyGroup>
+</Project>

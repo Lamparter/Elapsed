@@ -1,0 +1,70 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)\eng\AdditionalFiles.props" />
+	<Import Project="$(MSBuildThisFileDirectory)\eng\CurrentVersion.props" />
+	<Import Project="$(MSBuildThisFileDirectory)\eng\PackageMetadata.props" />
+
+	<!-- Directories -->
+	<PropertyGroup>
+		<RootDirectory Condition=" '$(RootDirectory)' == '' ">$(MSBuildThisFileDirectory)</RootDirectory>
+		<SourceDirectory Condition=" '$(SourceDirectory)' == '' ">$(MSBuildThisFileDirectory)src</SourceDirectory>
+		<BuildDirectory Condition=" '$(BuildDirectory)' == '' ">$(RootDirectory)eng</BuildDirectory>
+		<RepositoryFilesDirectory Condition=" '$(RepositoryFilesDirectory)' == '' ">$(RootDirectory).github</RepositoryFilesDirectory>
+
+		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\app</AppDirectory>
+		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
+	</PropertyGroup>
+
+	<!-- Versioning -->
+	<PropertyGroup>
+		<Product>Elapsed</Product>
+		<Company>Hackclub</Company>
+
+		<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
+		<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
+		<CurrentDay>$([System.DateTime]::Now.ToString("dd"))</CurrentDay>
+		<BuildDate>$(CurrentYear)$(CurrentMonth)$(CurrentDay)</BuildDate>
+
+		<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
+		<InformationalVersion>$(Product), Version=$(MajorVersion).$(MinorVersion), Channel=$(ReleaseLevel), Build=$(BuildDate)</InformationalVersion>
+		<DisplayVersion>$(AssemblyVersion).$(BuildDate)</DisplayVersion>
+		<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(DisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
+
+		<Version>$(DisplayVersion)</Version>
+		<PackageVersion>$(DisplayVersion)</PackageVersion>
+
+		<ApplicationTitle>$(Product)</ApplicationTitle>
+		<ApplicationId>$(MSBuildProjectName)</ApplicationId>
+		<ApplicationDisplayVersion>$(AssemblyVersion).0</ApplicationDisplayVersion>
+		<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
+		<ApplicationPublisher>$(Company)</ApplicationPublisher>
+	</PropertyGroup>
+
+	<!-- Generic properties -->
+	<PropertyGroup>
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<!--
+		Remove build warnings:
+			NU1507: Warning when there are multiple package sources when using CPM with no source mapping
+			NETSDK1201: Warning that specifying RID won't create self containing app
+			PRI257: Ignore default language (en) not being one of the included resources (eg en-us, en-uk)
+		-->
+		<NoWarn>$(NoWarn);NU1507;NETSDK1201;PRI257</NoWarn>
+	</PropertyGroup>
+
+	<!-- Deterministic build -->
+	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="$(SourceDirectory)\GlobalUsings.cs" />
+	</ItemGroup>
+</Project>
