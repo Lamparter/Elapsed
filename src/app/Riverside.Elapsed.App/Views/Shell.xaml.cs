@@ -1,10 +1,10 @@
-﻿namespace Riverside.Elapsed.App.Presentation;
+namespace Riverside.Elapsed.App.Presentation;
 
 public sealed partial class Shell : UserControl, IContentControlProvider
 {
-    public Shell()
-    {
-        this.InitializeComponent();
-    }
-    public ContentControl ContentControl => Splash;
+	public Shell()
+	{
+		this.InitializeComponent();
+	}
+	public ContentControl ContentControl => Splash;
 }
