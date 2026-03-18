@@ -5,6 +5,7 @@
 
 # Custom files
 **/Generated/**/*
+.idea/
 
 # User-specific files
 *.rsuser

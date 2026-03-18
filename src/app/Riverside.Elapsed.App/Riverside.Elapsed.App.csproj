@@ -1,4 +1,4 @@
-﻿<Project Sdk="Uno.Sdk">
+<Project Sdk="Uno.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-desktop</TargetFrameworks>
 
@@ -29,10 +29,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Presentation\" />
 	</ItemGroup>
 
 </Project>

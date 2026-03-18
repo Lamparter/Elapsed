@@ -79,7 +79,7 @@ public partial class App : Application
 					);
 				})
 				.UseAuthentication(auth =>
-	auth.AddWeb(name: "WebAuthentication")
+					auth.AddWeb(name: "WebAuthentication")
 				)
 				.ConfigureServices((context, services) =>
 				{

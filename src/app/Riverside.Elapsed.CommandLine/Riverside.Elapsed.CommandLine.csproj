@@ -4,9 +4,6 @@
 		<OutputType>Exe</OutputType>
 		<AssemblyName>elapsed</AssemblyName>
 		<TargetFramework>net10.0</TargetFramework>
-		<LangVersion>14.0</LangVersion>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,7 +15,7 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <ProjectReference Include="..\..\core\Riverside.Elapsed\Riverside.Elapsed.csproj" />
+	  <ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
 	</ItemGroup>
 
 </Project>

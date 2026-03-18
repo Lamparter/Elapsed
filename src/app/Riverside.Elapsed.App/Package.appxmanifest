@@ -4,10 +4,12 @@
 	xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
 	IgnorableNamespaces="uap rescap">
 
-	<Identity />
+	<Identity Name="Elapsed"/>
 
 	<Properties >
 		<Logo>Assets\AppTiles\Stable\PackageLogo.png</Logo>
+		<PublisherDisplayName>Hackclub</PublisherDisplayName>
+		<DisplayName>Elapsed</DisplayName>
 	</Properties >
 
 	<Dependencies>
@@ -23,7 +25,7 @@
 		<Application Id="App"
 			Executable="$targetnametoken$.exe"
 			EntryPoint="$targetentrypoint$">
-			<uap:VisualElements	Square150x150Logo="Assets\AppTiles\Stable\MediumTile.png" Square44x44Logo="Assets\AppTiles\Stable\AppIcon.png">
+			<uap:VisualElements	Square150x150Logo="Assets\AppTiles\Stable\MediumTile.png" Square44x44Logo="Assets\AppTiles\Stable\AppIcon.png" DisplayName="Elapsed">
 				<uap:DefaultTile Square71x71Logo="Assets\AppTiles\Stable\SmallTile.png" Wide310x150Logo="Assets\AppTiles\Stable\WideTile.png" Square310x310Logo="Assets\AppTiles\Stable\LargeTile.png"/>
 				<uap:SplashScreen Image="Assets\AppTiles\Stable\SplashScreen.png"/>
 			</uap:VisualElements >
