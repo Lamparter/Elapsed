@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - release/**
+  pull_request:
+    branches:
+      - main
+      - release/**
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.project_name }})
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project_name: CLI
+            project_path: src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj
+            target_framework: net10.0
+          - project_name: UnoApp
+            project_path: src/app/Riverside.Elapsed.App/Riverside.Elapsed.App.csproj
+            target_framework: net10.0-desktop
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            Directory.Packages.props
+            global.json
+
+      - name: Show .NET info
+        run: dotnet --info
+
+      - name: Restore
+        run: dotnet restore ${{ matrix.project_path }}
+
+      - name: Build
+        run: >-
+          dotnet build ${{ matrix.project_path }}
+          --configuration Release
+          --framework ${{ matrix.target_framework }}
+          --no-restore
+          /p:ContinuousIntegrationBuild=true
