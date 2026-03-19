@@ -138,7 +138,7 @@ Optionally, you can install the Elapsed CLI [as a .NET tool](https://nuget.org/p
 
 ### Elapsed API
 
-The Lapse API projection is a .NET Standard library that uses the [Kiota generator]() from the "Advanced Compiler Services for .NET" library.
+The Lapse API projection is a .NET Standard library that uses the [Kiota generator](https://github.com/Lamparter/CompilerPlatform/tree/main/src/features/Riverside.CompilerPlatform.Features.Kiota) from the "Advanced Compiler Services for .NET" library.
 It generates clean C# code, based on the Lapse API online everytime the core MSBuild pipeline is activated.
 
 > *Microsoft Kiota is the core backend that powers the Lapse API projection generator.*
