@@ -2,13 +2,8 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-      - release/**
   pull_request:
-    branches:
-      - main
-      - release/**
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -55,7 +50,9 @@ jobs:
         run: dotnet --info
 
       - name: Restore
-        run: dotnet restore ${{ matrix.project_path }}
+        run: >-
+          dotnet restore ${{ matrix.project_path }}
+          --framework ${{ matrix.target_framework }}
 
       - name: Build
         run: >-
@@ -64,3 +61,4 @@ jobs:
           --framework ${{ matrix.target_framework }}
           --no-restore
           /p:ContinuousIntegrationBuild=true
+          /p:TargetFramework=${{ matrix.target_framework }}
