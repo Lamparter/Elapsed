@@ -62,7 +62,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        uses: "./.github/steps/install_dependencies"
+        uses: "./.github/install_dependencies"
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
@@ -99,7 +99,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        uses: "./.github/steps/install_dependencies"
+        uses: "./.github/install_dependencies"
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
@@ -135,7 +135,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        uses: "./.github/steps/install_dependencies"
+        uses: "./.github/install_dependencies"
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
@@ -166,7 +166,7 @@ jobs:
 #          fetch-depth: 0
 #
 #      - name: Install Dependencies
-#        uses: "./.github/steps/install_dependencies"
+#        uses: "./.github/install_dependencies"
 #
 #      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
 #      - name: Setup MSBuild
