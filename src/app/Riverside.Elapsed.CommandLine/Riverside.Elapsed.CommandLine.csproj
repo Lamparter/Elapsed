@@ -13,7 +13,7 @@
 	<ItemGroup>
 		<PackageReference Include="System.CommandLine" Version="2.0.0" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 	  <ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
 	</ItemGroup>

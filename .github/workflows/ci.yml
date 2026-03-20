@@ -2,63 +2,180 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 env:
-  DOTNET_NOLOGO: true
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  WORKING_DIR: ${{ github.workspace }}
+  SOLUTION_PATH: '${{ github.workspace }}\Elapsed.slnx'
+  APP_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.App.csproj'
+  CLI_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.CommandLine.csproj'
+  API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed.csproj'
 
 jobs:
-  build:
-    name: Build (${{ matrix.project_name }})
+  formatting:
     runs-on: windows-latest
 
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+
+      - name: Install XAML Styler
+        run: 'dotnet tool install --global XamlStyler.Console'
+
+      - name: Check XAML formatting
+        id: check-step
+        run: |
+          $changedFiles = (git diff --diff-filter=d --name-only HEAD~1) -split "\n" | Where-Object {$_ -like "*.xaml"}
+          foreach ($file in $changedFiles)
+          {
+            xstyler -p -l None -f $file
+            if ($LASTEXITCODE -ne 0)
+            {
+              echo "::error file=$file::Format check failed"
+            }
+          }
+        continue-on-error: true
+
+      - name: Fail if necessary
+        if: steps.check-step.outcome == 'failure'
+        run: exit 1
+
+  app:
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - project_name: CLI
-            project_path: src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj
-            target_framework: net10.0
-          - project_name: UnoApp
-            project_path: src/app/Riverside.Elapsed.App/Riverside.Elapsed.App.csproj
-            target_framework: net10.0-desktop
+        configuration: [Preview, Release]
+        platform: [Desktop, Android, iOS]
+    env:
+      CONFIGURATION: ${{ matrix.configuration }}
+      PLATFORM: ${{ matrix.platform }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout the repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+      - name: Install Dependencies
+        uses: "./.github/steps/install_dependencies"
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.x
-          cache: true
-          cache-dependency-path: |
-            **/*.csproj
-            Directory.Packages.props
-            global.json
-
-      - name: Show .NET info
-        run: dotnet --info
+          global-json-file: global.json
 
       - name: Restore
-        run: >-
-          dotnet restore ${{ matrix.project_path }}
-          --framework ${{ matrix.target_framework }}
+        run: |
+          msbuild $env:SOLUTION_PATH `
+            -t:Restore `
+            -p:Configuration=$env:CONFIGURATION
 
       - name: Build
-        run: >-
-          dotnet build ${{ matrix.project_path }}
-          --configuration Release
-          --framework ${{ matrix.target_framework }}
-          --no-restore
-          /p:ContinuousIntegrationBuild=true
-          /p:TargetFramework=${{ matrix.target_framework }}
+        run: |
+          msbuild $env:APP_PROJECT_PATH `
+            -t:Build `
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
+
+  cli:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Preview, Release]
+    env:
+      CONFIGURATION: ${{ matrix.configuration }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: "./.github/steps/install_dependencies"
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: |
+          msbuild $env:SOLUTION_PATH `
+            -t:Restore `
+            -p:Configuration=$env:CONFIGURATION
+
+      - name: Build
+        run: |
+          msbuild $env:CLI_PROJECT_PATH `
+            -t:Build `
+            -p:Configuration=$env:CONFIGURATION
+
+  api:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Preview, Release]
+    env:
+      CONFIGURATION: ${{ matrix.configuration }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: "./.github/steps/install_dependencies"
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: |
+          msbuild $env:SOLUTION_PATH `
+            -t:Restore `
+            -p:Configuration=$env:CONFIGURATION
+
+      - name: Build
+        run: |
+          msbuild $env:API_PROJECT_PATH `
+            -t:Build `
+            -p:Configuration=$env:CONFIGURATION
+
+#  test:
+#    name: Unit Tests
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Install Dependencies
+#        uses: "./.github/steps/install_dependencies"
+#
+#      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+#      - name: Setup MSBuild
+#        uses: microsoft/setup-msbuild@v2
+#
+#      - name: Build UnoApp1.Tests (Release)
+#        shell: pwsh
+#        run: msbuild ./UnoApp1.Tests/UnoApp1.Tests.csproj /p:Configuration=Release /p:OverrideTargetFramework=net10.0 /r
+#
+#      - name: Run Unit Tests
+#        shell: pwsh
+#        run: dotnet test ./UnoApp1.Tests/UnoApp1.Tests.csproj --no-build -c Release --logger GitHubActions --blame-crash --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover

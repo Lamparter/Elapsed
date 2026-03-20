@@ -8,13 +8,13 @@
     }
   },
   "profiles": {
-    "Riverside.Elapsed.App (Desktop)": {
+    "Desktop": {
       "commandName": "Project",
       "compatibleTargetFramework": "desktop"
     },
-    "Riverside.Elapsed.App (Desktop WSL2)": {
+    "Desktop (WSL2)": {
       "commandName": "WSL2",
-      "commandLineArgs": "{ProjectDir}/bin/Debug/net10.0-desktop/Riverside.Elapsed.App.dll",
+      "commandLineArgs": "{ProjectDir}/bin/Preview/net10.0-desktop/Riverside.Elapsed.App.dll",
       "distributionName": "",
       "compatibleTargetFramework": "desktop"
     }

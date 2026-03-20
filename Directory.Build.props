@@ -50,6 +50,9 @@
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+		<Configurations>Preview;Release</Configurations>
+		<DefineConstants Condition="'$(Configuration)' == 'Preview'">$(DefineConstants);DEBUG</DefineConstants>
+
 		<!--
 		Remove build warnings:
 			NU1507: Warning when there are multiple package sources when using CPM with no source mapping
