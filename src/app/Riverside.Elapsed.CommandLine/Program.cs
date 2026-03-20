@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+using System.CommandLine;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -6,6 +7,7 @@ using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Kiota.Serialization.Json;
+using Riverside.Elapsed.Auth.Token;
 
 namespace Riverside.Elapsed.CommandLine;
 
@@ -118,15 +120,142 @@ public class Program
 			return 0;
 		});
 
+		var auth = new Command("auth") { Description = "Authenticate online to get a bearer token." };
+		auth.SetAction(async _ =>
+		{
+			return await HandleAuthAsync();
+		});
+
 		config.Add(setToken);
 		config.Add(clearToken);
 		config.Add(show);
+		config.Add(auth);
 		return config;
+	}
+
+	private static async Task<int> HandleAuthAsync()
+	{
+		try
+		{
+			const string clientId = Constants.ClientId;
+			const string redirectUri = "http://localhost:8765/auth/callback";
+			const string scopes = "timelapse:read timelapse:write comment:write user:read user:write";
+			
+			var baseUrl = LoadConfig().BaseUrl ?? Constants.Endpoint;
+
+			var (codeVerifier, codeChallenge) = GeneratePKCEChallenge();
+			var state = GenerateRandomString(32);
+
+			var authorizeUrl = $"{baseUrl}/auth/authorize" +
+				$"?client_id={Uri.EscapeDataString(clientId)}" +
+				$"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+				$"&response_type=code" +
+				$"&scope={Uri.EscapeDataString(scopes)}" +
+				$"&state={Uri.EscapeDataString(state)}" +
+				$"&code_challenge={Uri.EscapeDataString(codeChallenge)}" +
+				$"&code_challenge_method=S256";
+
+			Console.WriteLine("Opening browser for authentication...");
+			Console.WriteLine($"If the browser doesn't open, visit: {authorizeUrl}");
+
+			OpenBrowser(authorizeUrl);
+
+			using var httpListener = new HttpListener();
+			httpListener.Prefixes.Add("http://localhost:8765/");
+			httpListener.Start();
+
+			string? authCode = null;
+			string? returnedState = null;
+			
+			try
+			{
+				var context = await httpListener.GetContextAsync();
+				var request = context.Request;
+				var response = context.Response;
+
+				authCode = request.QueryString["code"];
+				returnedState = request.QueryString["state"];
+				var error = request.QueryString["error"];
+
+				if (!string.IsNullOrEmpty(error))
+				{
+					response.StatusCode = 400;
+					var errorMessage = $"Authentication error: {error}";
+					var buffer = Encoding.UTF8.GetBytes(errorMessage);
+					response.OutputStream.Write(buffer, 0, buffer.Length);
+					response.Close();
+					Console.Error.WriteLine(errorMessage);
+					return 1;
+				}
+
+				if (string.IsNullOrEmpty(authCode) || returnedState != state)
+				{
+					response.StatusCode = 400;
+					var errorMsg = "Invalid response from authentication server";
+					var buffer = Encoding.UTF8.GetBytes(errorMsg);
+					response.OutputStream.Write(buffer, 0, buffer.Length);
+					response.Close();
+					Console.Error.WriteLine(errorMsg);
+					return 1;
+				}
+
+				response.StatusCode = 200;
+				var successMessage = "Authentication successful! You can close this window.";
+				var successBuffer = Encoding.UTF8.GetBytes(successMessage);
+				response.OutputStream.Write(successBuffer, 0, successBuffer.Length);
+				response.Close();
+			}
+			finally
+			{
+				httpListener.Stop();
+			}
+
+			Console.WriteLine("Exchanging authorisation code for token...");
+
+			var adapter = new HttpClientRequestAdapter(new NoAuthProvider());
+			adapter.BaseUrl = baseUrl;
+			var client = new ApiClient(adapter);
+
+			var tokenRequest = new TokenPostRequestBody
+			{
+				ClientId = clientId,
+				Code = authCode,
+				CodeVerifier = codeVerifier,
+				RedirectUri = redirectUri,
+				GrantType = new UntypedString("authorization_code")
+			};
+
+			var tokenResponse = await client.Auth.Token.PostAsTokenPostResponseAsync(tokenRequest);
+			
+			if (string.IsNullOrEmpty(tokenResponse?.AccessToken))
+			{
+				Console.Error.WriteLine("Failed to obtain access token from server.");
+				return 1;
+			}
+
+			var cfg = LoadConfig();
+			cfg.Token = tokenResponse.AccessToken;
+			SaveConfig(cfg);
+
+			Console.WriteLine("Authentication successful! Token has been saved.");
+			Console.WriteLine($"Token: {MaskToken(tokenResponse.AccessToken)}");
+			if (!string.IsNullOrEmpty(tokenResponse.RefreshToken))
+			{
+				Console.WriteLine($"Refresh token: {MaskToken(tokenResponse.RefreshToken)}");
+			}
+
+			return 0;
+		}
+		catch (Exception ex)
+		{
+			Console.Error.WriteLine($"Authentication failed: {ex.Message}");
+			return 1;
+		}
 	}
 
 	private static Command BuildListOperationsCommand()
 	{
-		var list = new Command("list-operations") { Description = "List all generated API operations in this CLI." };
+		var list = new Command("list-operations") { Description = "List all generated API operations that are available." };
 		list.SetAction(_ =>
 		{
 			foreach (var descriptor in GetOperationDescriptors().OrderBy(x => x.OperationPath))
@@ -175,8 +304,7 @@ public class Program
 			var config = LoadConfig();
 			var baseUrl = parseResult.GetValue(BaseUrlOption)
 				?? config.BaseUrl
-				?? Environment.GetEnvironmentVariable("LAPSE_BASE_URL")
-				?? "https://api.lapse.hackclub.com/api";
+				?? Constants.Endpoint;
 
 			var token = ResolveToken(parseResult, config);
 			var adapter = new HttpClientRequestAdapter(new StaticBearerAuthProvider(token));
@@ -424,7 +552,7 @@ public class Program
 			.MakeGenericMethod(targetType);
 
 		return getObjectValue.Invoke(rootNode, [parseFactory])
-			?? throw new InvalidOperationException($"Failed to deserialize JSON into {targetType.FullName}.");
+			?? throw new InvalidOperationException($"Failed to deserialise JSON into {targetType.FullName}.");
 	}
 
 	private static object?[] BuildMethodArgs(MethodInfo method, object? bodyArg, object? requestConfigArg, CancellationToken cancellationToken)
@@ -748,5 +876,55 @@ public class Program
 		}
 
 		return $"{token[..4]}...{token[^4..]}";
+	}
+
+	private static (string verifier, string challenge) GeneratePKCEChallenge()
+	{
+		var verifier = GenerateRandomString(128);
+
+		using var sha256 = System.Security.Cryptography.SHA256.Create();
+		var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(verifier));
+		var challenge = Convert.ToBase64String(challengeBytes)
+			.Replace("+", "-")
+			.Replace("/", "_")
+			.TrimEnd('=');
+
+		return (verifier, challenge);
+	}
+
+	private static string GenerateRandomString(int length)
+	{
+		const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		var random = new Random();
+		return new string(Enumerable.Range(0, length)
+			.Select(_ => chars[random.Next(chars.Length)])
+			.ToArray());
+	}
+
+	private static void OpenBrowser(string url)
+	{
+		try
+		{
+			if (OperatingSystem.IsWindows())
+			{
+				System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+				{
+					FileName = url,
+					UseShellExecute = true,
+				});
+			}
+			else if (OperatingSystem.IsMacOS())
+			{
+				System.Diagnostics.Process.Start("open", url);
+			}
+			else if (OperatingSystem.IsLinux())
+			{
+				System.Diagnostics.Process.Start("xdg-open", url);
+			}
+		}
+		catch
+		{
+			// the user can still manually visit the URL
+		}
 	}
 }
