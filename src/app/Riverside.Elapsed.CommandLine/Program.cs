@@ -307,6 +307,12 @@ public class Program
 				?? Constants.Endpoint;
 
 			var token = ResolveToken(parseResult, config);
+			if (string.IsNullOrWhiteSpace(token))
+			{
+				Console.Error.WriteLine($"Warning: no authentication token configured. Executing '{operation.OperationPath}' unauthenticated.");
+				Console.Error.WriteLine("Run 'config auth' to authenticate.");
+			}
+
 			var adapter = new HttpClientRequestAdapter(new StaticBearerAuthProvider(token));
 			adapter.BaseUrl = baseUrl;
 			var client = new ApiClient(adapter);
@@ -376,8 +382,7 @@ public class Program
 			return File.ReadAllText(tokenFile.FullName).Trim();
 		}
 
-		return config.Token
-			?? Environment.GetEnvironmentVariable("LAPSE_TOKEN");
+		return config.Token;
 	}
 
 	private static string? ResolveBodyJson(ParseResult parseResult)
