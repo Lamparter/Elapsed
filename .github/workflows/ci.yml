@@ -60,6 +60,8 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
