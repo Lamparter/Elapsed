@@ -79,7 +79,6 @@ jobs:
       - name: Restore .NET workloads
         shell: pwsh
         run: |
-          dotnet workload install $($env:PLATFORM.ToLower())
           dotnet workload restore $env:APP_PROJECT_PATH
 
       - name: Restore
@@ -126,7 +125,7 @@ jobs:
 
       - name: Restore
         run: |
-          msbuild $env:CLI_PROJECT_PATH `
+          msbuild $env:SOLUTION_PATH `
             -t:Restore `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
@@ -166,7 +165,7 @@ jobs:
 
       - name: Restore
         run: |
-          msbuild $env:API_PROJECT_PATH `
+          msbuild $env:SOLUTION_PATH `
             -t:Restore `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
