@@ -56,6 +56,9 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 
 #### 2. Set up IDE
 
+> Using Visual Studio 2026 is recommended for Elapsed development.
+> Otherwise, you might see issues with the .NET SDK.
+
 ##### Visual Studio
 
 - Microsoft Visual Studio with .NET
