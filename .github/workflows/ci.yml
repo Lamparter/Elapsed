@@ -80,6 +80,7 @@ jobs:
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Restore `
+            -p:RestoreRecursive=true `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
