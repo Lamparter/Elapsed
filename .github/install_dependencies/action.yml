@@ -13,7 +13,6 @@ inputs:
   sdkVersion:
     description: 'The version of the Windows Sdk'
     required: false
-    default: '19041'
 
 runs:
   using: "composite"
@@ -27,7 +26,7 @@ runs:
     # Install Windows SDK
     - name: Install Windows SDK ${{ inputs.sdkVersion }}
       shell: pwsh
-      if: ${{ runner.os == 'Windows' }}
+      if: ${{ runner.os == 'Windows' && inputs.sdkVersion != '' }}
       run: .\.github\Install-WindowsSdkISO.ps1 ${{ inputs.sdkVersion }}
 
     # Run Uno.Check
