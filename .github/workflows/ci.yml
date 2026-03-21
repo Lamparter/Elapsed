@@ -81,7 +81,8 @@ jobs:
           msbuild $env:APP_PROJECT_PATH `
             -t:Restore `
             -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
 
       - name: Build
         run: |
