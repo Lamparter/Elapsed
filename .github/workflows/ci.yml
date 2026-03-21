@@ -78,7 +78,9 @@ jobs:
 
       - name: Restore .NET workloads
         shell: pwsh
-        run: dotnet workload restore $env:APP_PROJECT_PATH
+        run: |
+          dotnet workload install $($env:PLATFORM.ToLower())
+          dotnet workload restore $env:APP_PROJECT_PATH
 
       - name: Restore
         run: |
