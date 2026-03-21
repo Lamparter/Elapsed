@@ -142,6 +142,8 @@ jobs:
         uses: "./.github/install_dependencies"
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: 18
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
       - name: Setup .NET
