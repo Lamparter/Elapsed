@@ -17,16 +17,16 @@ env:
 
 jobs:
   formatting:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
 
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
 
       - name: Install XAML Styler
         run: 'dotnet tool install --global XamlStyler.Console'
@@ -50,7 +50,7 @@ jobs:
         run: exit 1
 
   app:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
       matrix:
@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
@@ -72,7 +72,7 @@ jobs:
           global-json-file: ${{ env.GLOBAL_JSON_PATH }}
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
@@ -97,7 +97,7 @@ jobs:
             -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
 
   cli:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
       matrix:
@@ -107,14 +107,14 @@ jobs:
 
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
         with:
           dotnet-version: 10.0.102
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
@@ -137,7 +137,7 @@ jobs:
             -p:Configuration=$env:CONFIGURATION
 
   api:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
       matrix:
@@ -147,14 +147,14 @@ jobs:
 
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
         with:
           dotnet-version: 10.0.102
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
@@ -189,7 +189,7 @@ jobs:
 #
 #      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
 #      - name: Setup MSBuild
-#        uses: microsoft/setup-msbuild@v2
+#        uses: microsoft/setup-msbuild@v3
 #
 #      - name: Build UnoApp1.Tests (Release)
 #        shell: pwsh
