@@ -78,7 +78,7 @@ jobs:
 
       - name: Restore
         run: |
-          msbuild $env:SOLUTION_PATH `
+          msbuild $env:APP_PROJECT_PATH `
             -t:Restore `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
@@ -115,7 +115,7 @@ jobs:
 
       - name: Restore
         run: |
-          msbuild $env:SOLUTION_PATH `
+          msbuild $env:CLI_PROJECT_PATH `
             -t:Restore `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
@@ -151,7 +151,7 @@ jobs:
 
       - name: Restore
         run: |
-          msbuild $env:SOLUTION_PATH `
+          msbuild $env:API_PROJECT_PATH `
             -t:Restore `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
