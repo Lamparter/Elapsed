@@ -46,3 +46,8 @@ runs:
             echo "uno-check finished for target: $target "
           }
         })
+
+    # Restore workloads
+    - name: Restore .NET workloads
+      shell: pwsh
+      run: dotnet workload restore
