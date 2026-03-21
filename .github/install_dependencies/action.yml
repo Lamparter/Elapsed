@@ -10,7 +10,10 @@ inputs:
     description: 'Installs and sets the .NET SDK Version'
     required: false
     default: '10.0.x'
-  sdkVersion:
+  global-json-file:
+    description: 'The global.json file specifying what SDK must be installed'
+    required: false
+  sdk-version:
     description: 'The version of the Windows Sdk'
     required: false
 
@@ -22,12 +25,13 @@ runs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '${{ inputs.dotnet-version }}'
+        global-json-file: '${{ inputs.global-json-file }}'
 
     # Install Windows SDK
-    - name: Install Windows SDK ${{ inputs.sdkVersion }}
+    - name: Install Windows SDK ${{ inputs.sdk-version }}
       shell: pwsh
-      if: ${{ runner.os == 'Windows' && inputs.sdkVersion != '' }}
-      run: .\.github\Install-WindowsSdkISO.ps1 ${{ inputs.sdkVersion }}
+      if: ${{ runner.os == 'Windows' && inputs.sdk-version != '' }}
+      run: .\.github\Install-WindowsSdkISO.ps1 ${{ inputs.sdk-version }}
 
     # Run Uno.Check
     - name: Install ${{ inputs.target-platform }} Workloads
