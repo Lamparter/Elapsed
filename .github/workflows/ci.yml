@@ -67,7 +67,7 @@ jobs:
         uses: "./.github/install_dependencies"
         with:
           target-platform: ${{ matrix.platform }}
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.102
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
@@ -102,7 +102,7 @@ jobs:
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.102
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
@@ -140,7 +140,7 @@ jobs:
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.102
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
