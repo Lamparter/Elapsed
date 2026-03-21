@@ -76,6 +76,10 @@ jobs:
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
+      - name: Restore .NET workloads
+        shell: pwsh
+        run: dotnet workload restore $env:APP_PROJECT_PATH
+
       - name: Restore
         run: |
           msbuild $env:SOLUTION_PATH `
@@ -114,6 +118,10 @@ jobs:
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
+      - name: Restore .NET workloads
+        shell: pwsh
+        run: dotnet workload restore $env:APP_PROJECT_PATH
+
       - name: Restore
         run: |
           msbuild $env:CLI_PROJECT_PATH `
@@ -149,6 +157,10 @@ jobs:
         uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
+
+      - name: Restore .NET workloads
+        shell: pwsh
+        run: dotnet workload restore $env:APP_PROJECT_PATH
 
       - name: Restore
         run: |
