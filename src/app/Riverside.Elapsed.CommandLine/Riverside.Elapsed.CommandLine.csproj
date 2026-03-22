@@ -2,8 +2,10 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<AssemblyName>elapsed</AssemblyName>
 		<TargetFramework>net10.0</TargetFramework>
+
+		<PackAsTool>True</PackAsTool>
+		<ToolCommandName>elapsed</ToolCommandName>
 	</PropertyGroup>
 
 	<ItemGroup>

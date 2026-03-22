@@ -1,5 +1,6 @@
 <Project>
 	<PropertyGroup>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>$(Product)</Title>
 		<Authors>Lamparter, ascpixi, Hackclub</Authors>
 		<Copyright>Copyright (c) 2026 Lamparter</Copyright>

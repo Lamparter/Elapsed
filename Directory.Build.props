@@ -12,12 +12,18 @@
 
 		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\app</AppDirectory>
 		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
+
+		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
 	</PropertyGroup>
 
 	<!-- Versioning -->
 	<PropertyGroup>
 		<Product>Elapsed</Product>
 		<Company>Hackclub</Company>
+
+		<ReleaseLevel>final</ReleaseLevel>
+		<ReleaseLevel Condition="'$(Configuration)' == 'Preview'">preview</ReleaseLevel>
+		<BetaVersion Condition="'$(BetaVersion)' == ''">0</BetaVersion>
 
 		<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
 		<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
@@ -65,7 +71,8 @@
 	<!-- Deterministic build -->
 	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<PublishDir>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</PublishDir>
+		<PublishDir>$(CIOutputDirectory)</PublishDir>
+		<PackageOutputPath>$(CIOutputDirectory)</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
