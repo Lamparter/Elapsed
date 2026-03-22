@@ -53,11 +53,8 @@
 		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' == ''">
 			<BetaVersion>1</BetaVersion>
 		</PropertyGroup>
-		<Exec Command="powershell -NoProfile -Command &quot;Write-Host ([int]'$(_BetaMatch)' + 1)&quot;" ConsoleToMSBuild="true" Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
-			<Output TaskParameter="ConsoleOutput" PropertyName="_BetaVersionOutput" />
-		</Exec>
-		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaVersionOutput)' != ''">
-			<BetaVersion>$(_BetaVersionOutput.Trim())</BetaVersion>
+		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
+			<BetaVersion>$([MSBuild]::Add($(_BetaMatch), 1))</BetaVersion>
 		</PropertyGroup>
 		<PropertyGroup>
 			<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
