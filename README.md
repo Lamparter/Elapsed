@@ -273,7 +273,7 @@ If you want a more detailed understanding of my C# coding conventions, see the [
 #### Versioning practices
 
 Elapsed uses a custom versioning system that is unlike the generic Semantic Versioning spec.
-Versions follow the format `{MAJOR}.{MINOR}.{DATE}[-{LEVEL}.{PRERELEASE}]`, where:
+Versions follow the format `{MAJOR}.{MINOR}.{DATE}[-{LEVEL}{PRERELEASE}]`, where:
 - `MAJOR` is the major release version
 - `MINOR` is the minor release version
 - `DATE` is the build date in yymmdd format, e.g. `260320`
@@ -297,7 +297,7 @@ The CD workflow deploys to the following marketplaces:
 - ~~Google Play Store~~
 - ~~Apple App Store~~
 
-Preview versions are only ever published to GitHub releases.
+Preview versions are only ever published to GitHub releases and NuGet.
 The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically by the CD workflow, based on what the previous release version was.
 For example, if there is an existing preview with preview version 2, creating a new preview release will have the preview version value of 3.
 
