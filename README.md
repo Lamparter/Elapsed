@@ -292,6 +292,7 @@ A release to the mainstream publishing channel (all marketplaces) can be trigger
 
 The CD workflow deploys to the following marketplaces:
 - GitHub Releases
+- NuGet
 - ~~Microsoft Store~~
 - ~~Google Play Store~~
 - ~~Apple App Store~~
