@@ -89,6 +89,16 @@ jobs:
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build
+        if: matrix.platform == 'iOS'
+        run: |
+          msbuild $env:APP_PROJECT_PATH `
+            -t:Build `
+            -p:Platform="Any CPU" `
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
+
+      - name: Build & publish
+        if: matrix.platform != 'iOS'
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Publish `
@@ -96,7 +106,7 @@ jobs:
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
 
-      - name: Publish artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: 'Riverside.Elapsed.App_${{ env.CONFIGURATION }}_net10.0-${{ env.PLATFORM }}'
@@ -135,14 +145,14 @@ jobs:
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
-      - name: Build
+      - name: Build & publish
         run: |
           msbuild $env:CLI_PROJECT_PATH `
             -t:Publish `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
-      - name: Publish artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: 'Riverside.Elapsed.CommandLine_${{ env.CONFIGURATION }}_net10.0'
@@ -181,14 +191,14 @@ jobs:
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
-      - name: Build
+      - name: Build & publish
         run: |
           msbuild $env:API_PROJECT_PATH `
             -t:Publish `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
-      - name: Publish artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: 'Riverside.Elapsed_${{ env.CONFIGURATION }}_netstandard2.0'
