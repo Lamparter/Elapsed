@@ -1,4 +1,8 @@
 <Solution>
+	<Configurations>
+		<BuildType Name="Preview" />
+		<BuildType Name="Release" />
+	</Configurations>
 	<Folder Name="/eng/">
 		<File Path="eng/AdditionalFiles.props" />
 		<File Path="eng/CurrentVersion.props" />
@@ -7,7 +11,7 @@
 	<Folder Name="/src/" />
 	<Folder Name="/src/app/">
 		<Project Path="src/app/Riverside.Elapsed.App/Riverside.Elapsed.App.csproj">
-			<Deploy Solution="Debug|*" />
+			<Deploy />
 		</Project>
 		<Project Path="src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj" />
 	</Folder>

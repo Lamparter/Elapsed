@@ -1,4 +1,4 @@
-<Project>
+<Project InitialTargets="GetLatestGitTag">
 	<Import Project="$(MSBuildThisFileDirectory)\eng\AdditionalFiles.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\CurrentVersion.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\PackageMetadata.props" />
@@ -12,12 +12,19 @@
 
 		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\app</AppDirectory>
 		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
+
+		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
 	</PropertyGroup>
 
 	<!-- Versioning -->
 	<PropertyGroup>
 		<Product>Elapsed</Product>
 		<Company>Hackclub</Company>
+
+		<ReleaseLevel>final</ReleaseLevel>
+		<ReleaseLevel Condition="'$(Configuration)' == 'Preview'">preview</ReleaseLevel>
+		<_LatestGitTag></_LatestGitTag>
+		<_BetaMatch></_BetaMatch>
 
 		<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
 		<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
@@ -26,11 +33,7 @@
 
 		<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
 		<InformationalVersion>$(Product), Version=$(MajorVersion).$(MinorVersion), Channel=$(ReleaseLevel), Build=$(BuildDate)</InformationalVersion>
-		<DisplayVersion>$(AssemblyVersion).$(BuildDate)</DisplayVersion>
-		<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(DisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
-
-		<Version>$(DisplayVersion)</Version>
-		<PackageVersion>$(DisplayVersion)</PackageVersion>
+		<BaseDisplayVersion>$(AssemblyVersion).$(BuildDate)</BaseDisplayVersion>
 
 		<ApplicationTitle>$(Product)</ApplicationTitle>
 		<ApplicationId>$(MSBuildProjectName)</ApplicationId>
@@ -38,6 +41,28 @@
 		<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
 		<ApplicationPublisher>$(Company)</ApplicationPublisher>
 	</PropertyGroup>
+
+	<Target Name="GetLatestGitTag" Condition="'$(_LatestGitTag)' == ''">
+		<Exec Command="git describe --tags --abbrev=0" ConsoleToMSBuild="true" IgnoreExitCode="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_LatestGitTag" />
+		</Exec>
+		<PropertyGroup>
+			<_LatestGitTag>$(_LatestGitTag.Trim())</_LatestGitTag>
+			<_BetaMatch>$([System.Text.RegularExpressions.Regex]::Match('$(_LatestGitTag)', '-preview(\d+)$').Groups[1].Value)</_BetaMatch>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' == ''">
+			<BetaVersion>1</BetaVersion>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
+			<BetaVersion>$([MSBuild]::Add($(_BetaMatch), 1))</BetaVersion>
+		</PropertyGroup>
+		<PropertyGroup>
+			<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
+			<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(BaseDisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
+			<Version>$(DisplayVersion)</Version>
+			<PackageVersion>$(DisplayVersion)</PackageVersion>
+		</PropertyGroup>
+	</Target>
 
 	<!-- Generic properties -->
 	<PropertyGroup>
@@ -49,6 +74,9 @@
 		<LangVersion>12.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<Configurations>Preview;Release</Configurations>
+		<DefineConstants Condition="'$(Configuration)' == 'Preview'">$(DefineConstants);DEBUG</DefineConstants>
 
 		<!--
 		Remove build warnings:
@@ -62,6 +90,8 @@
 	<!-- Deterministic build -->
 	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<PublishDir>$(CIOutputDirectory)</PublishDir>
+		<PackageOutputPath>$(CIOutputDirectory)</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

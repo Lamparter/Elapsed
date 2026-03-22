@@ -270,8 +270,36 @@ The code style convention of Elapsed is generally not very strict, but these are
 
 If you want a more detailed understanding of my C# coding conventions, see the [example code style document I made](https://gist.github.com/Lamparter/512ed5f2bdd4174376eb7fbe4460c2b2).
 
-#### Tools for development
+#### Versioning practices
 
+Elapsed uses a custom versioning system that is unlike the generic Semantic Versioning spec.
+Versions follow the format `{MAJOR}.{MINOR}.{DATE}[-{LEVEL}{PRERELEASE}]`, where:
+- `MAJOR` is the major release version
+- `MINOR` is the minor release version
+- `DATE` is the build date in yymmdd format, e.g. `260320`
+- `LEVEL` is the release level (`preview` if a preview channel, or none if else)
+- `PRERELEASE` is the version of the prerelease (this is automatically updated)
+
+For example, a version could look like this: `2.2.260220`, or `2.5.260522-preview2`.
+
+The Elapsed project contains two build configurations, <kbd>Release</kbd> and <kbd>Preview</kbd>.
+Each build configuration has slightly different settings, and feature flags within the app may be dependent on which build configuration is enabled.
+Generally, you should always build the 'Preview' configuration.
+
+Releases are automatically published to GitHub and other marketplaces by the CD workflow.
+The CD workflow runs on every push to main, and publishes a new Preview channel release to the deployment.
+A release to the mainstream publishing channel (all marketplaces) can be triggered by updating the `eng/CurrentVersion.props` with a new version number.
+
+The CD workflow deploys to the following marketplaces:
+- GitHub Releases
+- NuGet
+- ~~Microsoft Store~~
+- ~~Google Play Store~~
+- ~~Apple App Store~~
+
+Preview versions are only ever published to GitHub releases and NuGet.
+The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically by the CD workflow, based on what the previous release version was.
+For example, if there is an existing preview with preview version 2, creating a new preview release will have the preview version value of 3.
 
 #### Trimming and native AOT compilation
 

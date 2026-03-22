@@ -9,7 +9,7 @@
       "type": "Uno",
       "request": "launch",
       // any Uno* task will do, this is simply to satisfy vscode requirement when a launch.json is present
-      "preLaunchTask": "Uno: android | Debug | android-x64"
+      "preLaunchTask": "Uno: android | Preview | android-x64"
     },
     {
       // Use IntelliSense to find out which attributes exist for C# debugging
@@ -20,9 +20,9 @@
       "request": "launch",
       "preLaunchTask": "build-desktop",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/app/Riverside.Elapsed.App/bin/Debug/net10.0-desktop/Riverside.Elapsed.App.dll",
+      "program": "${workspaceFolder}/src/app/Riverside.Elapsed.App/bin/Preview/net10.0-desktop/Riverside.Elapsed.App.dll",
       "args": [],
-      "launchSettingsProfile": "Riverside.Elapsed.App (Desktop)",
+      "launchSettingsProfile": "Desktop",
       "env": {
         "DOTNET_MODIFIABLE_ASSEMBLIES": "debug"
       },
