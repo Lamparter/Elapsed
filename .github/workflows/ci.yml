@@ -250,6 +250,8 @@ jobs:
           $betaVersion = 1
           if ($latestTag -match '-preview(\d+)$') {
             $betaVersion = [int]$Matches[1] + 1
+          } else {
+            $minorVersion = [int]$minorVersion + 1
           }
 
           if ($before -eq '0000000000000000000000000000000000000000') {
