@@ -1,4 +1,4 @@
-<Project>
+<Project InitialTargets="GetLatestGitTag">
 	<Import Project="$(MSBuildThisFileDirectory)\eng\AdditionalFiles.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\CurrentVersion.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\PackageMetadata.props" />
@@ -23,7 +23,8 @@
 
 		<ReleaseLevel>final</ReleaseLevel>
 		<ReleaseLevel Condition="'$(Configuration)' == 'Preview'">preview</ReleaseLevel>
-		<BetaVersion Condition="'$(BetaVersion)' == ''">0</BetaVersion>
+		<_LatestGitTag></_LatestGitTag>
+		<_BetaMatch></_BetaMatch>
 
 		<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
 		<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
@@ -32,11 +33,7 @@
 
 		<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
 		<InformationalVersion>$(Product), Version=$(MajorVersion).$(MinorVersion), Channel=$(ReleaseLevel), Build=$(BuildDate)</InformationalVersion>
-		<DisplayVersion>$(AssemblyVersion).$(BuildDate)</DisplayVersion>
-		<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(DisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
-
-		<Version>$(DisplayVersion)</Version>
-		<PackageVersion>$(DisplayVersion)</PackageVersion>
+		<BaseDisplayVersion>$(AssemblyVersion).$(BuildDate)</BaseDisplayVersion>
 
 		<ApplicationTitle>$(Product)</ApplicationTitle>
 		<ApplicationId>$(MSBuildProjectName)</ApplicationId>
@@ -44,6 +41,31 @@
 		<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
 		<ApplicationPublisher>$(Company)</ApplicationPublisher>
 	</PropertyGroup>
+
+	<Target Name="GetLatestGitTag" Condition="'$(_LatestGitTag)' == ''">
+		<Exec Command="git describe --tags --abbrev=0" ConsoleToMSBuild="true" IgnoreExitCode="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_LatestGitTag" />
+		</Exec>
+		<PropertyGroup>
+			<_LatestGitTag>$(_LatestGitTag.Trim())</_LatestGitTag>
+			<_BetaMatch>$([System.Text.RegularExpressions.Regex]::Match('$(_LatestGitTag)', '-preview(\d+)$').Groups[1].Value)</_BetaMatch>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' == ''">
+			<BetaVersion>1</BetaVersion>
+		</PropertyGroup>
+		<Exec Command="powershell -NoProfile -Command &quot;Write-Host ([int]'$(_BetaMatch)' + 1)&quot;" ConsoleToMSBuild="true" Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_BetaVersionOutput" />
+		</Exec>
+		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaVersionOutput)' != ''">
+			<BetaVersion>$(_BetaVersionOutput.Trim())</BetaVersion>
+		</PropertyGroup>
+		<PropertyGroup>
+			<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
+			<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(BaseDisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
+			<Version>$(DisplayVersion)</Version>
+			<PackageVersion>$(DisplayVersion)</PackageVersion>
+		</PropertyGroup>
+	</Target>
 
 	<!-- Generic properties -->
 	<PropertyGroup>
