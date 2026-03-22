@@ -63,6 +63,9 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
