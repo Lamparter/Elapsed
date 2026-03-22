@@ -29,6 +29,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.0" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
 	</ItemGroup>
 
