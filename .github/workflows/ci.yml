@@ -155,8 +155,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed.CommandLine_${{ env.CONFIGURATION }}_net10.0'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.CONFIGURATION }}\net10.0'
+          name: 'Riverside.Elapsed.CommandLine_${{ env.CONFIGURATION }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.CONFIGURATION }}'
 
   api:
     runs-on: windows-2025-vs2026
@@ -201,8 +201,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed_${{ env.CONFIGURATION }}_netstandard2.0'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}\netstandard2.0'
+          name: 'Riverside.Elapsed_${{ env.CONFIGURATION }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}'
 
 #  test:
 #    name: Unit Tests
