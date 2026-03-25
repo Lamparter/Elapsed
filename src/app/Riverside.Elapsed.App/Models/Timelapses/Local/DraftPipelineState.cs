@@ -14,6 +14,7 @@ public class DraftPipelineState
 		Error,
 	}
 
+	public Phase CurrentPhase;
 	public double Progress;
 	public string? LastError;
 }

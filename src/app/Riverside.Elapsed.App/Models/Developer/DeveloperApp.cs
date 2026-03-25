@@ -7,10 +7,10 @@ public class DeveloperApp
 	public string Description;
 	public Uri HomepageUrl;
 	public Uri? IconUrl;
-	public IReadOnlyList<Uri> RedirectUrls;
+	public IReadOnlyList<Uri> RedirectUris;
 	public IReadOnlyList<string> Scopes;
 	public TrustLevel TrustLevel;
 	public string ClientId;
 	public DateTimeOffset CreatedAt;
-	public (string, string, string)? CreatedBy;
+	public User.User? CreatedBy;
 }
