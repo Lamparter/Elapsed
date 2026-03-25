@@ -14,7 +14,7 @@ public class DraftPipelineState
 		Error,
 	}
 
-	public Phase CurrentPhase;
-	public double Progress;
-	public string? LastError;
+	public Phase CurrentPhase { get; init; } = Phase.LocalOnly;
+	public double Progress { get; init; }
+	public string? LastError { get; init; }
 }

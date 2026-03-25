@@ -12,7 +12,7 @@ public class DraftTimelapse
 	public DateTimeOffset CreatedAt;
 	public User.User Owner;
 	public Guid DeviceId;
-	public byte[] IvBytes; // IvHex
+	public string IvHex;
 	public Uri PreviewThumbnailUrl;
 	public IReadOnlyList<Uri> Sessions;
 	public IReadOnlyList<DraftEdit> EditList;
