@@ -43,7 +43,7 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 > [!CAUTION]
 > There is currently an issue with Uno Platform that prevents parts of the app renderer from working.
 > The workaround for this issue is to replace all occurences the word `Preview` (**this is case sensitive!**) with `Debug` in `Elapsed.slnx` and `Directory.Build.props`.
-> For more information, see [unoplatform/studio#132](https://github.com/Lamparter/Elapsed/issues/27), which contains a full report of the issue.
+> For more information, see [unoplatform/studio#132](https://github.com/unoplatform/studio/issues/132), which contains a full report of the issue.
 
 > These are the instructions for building the Uno Platform project (main app).
 > For other projects, you can build as normal with the latest .NET SDK, without the prerequisites listed below.
