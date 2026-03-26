@@ -1,11 +1,14 @@
+using Riverside.Elapsed.App.Models.Primitives;
+
 namespace Riverside.Elapsed.App.Models.Timelapses.Local;
 
-public class LocalSession
+public sealed record LocalSession : IUploadable
 {
-	public Guid LocalSessionId;
-	public string FilePath;
-	public long FileSizeBytes;
-	// RecordedAtStart, RecordedAtEnd
-	//public SessionEncryptionState Encryption;
-	public TusUploadState Upload;
+	public Guid LocalSessionId { get; init; }
+
+	public string FilePath { get; init; } = string.Empty;
+	public long FileSizeBytes { get; init; }
+
+	public string? UploadToken { get; init; }
+	public TusUploadState Upload { get; init; } = new();
 }

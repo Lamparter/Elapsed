@@ -3,8 +3,8 @@ namespace Riverside.Elapsed.App.Models.Timelapses.Local;
 public sealed record LocalDraft
 {
 	public Guid LocalDraftId { get; init; }
-	public string Name { get; init; } = "";
-	public string Description { get; init; } = "";
+	public string Name { get; init; } = string.Empty;
+	public string Description { get; init; } = string.Empty;
 	public DateTimeOffset CreatedAt { get; init; }
 	public DateTimeOffset LastModifiedAt { get; init; }
 
@@ -18,4 +18,22 @@ public sealed record LocalDraft
 
 	public RemoteDraftSync? Remote { get; init; }
 	public DraftPipelineState State { get; init; } = new();
+
+	public static LocalDraft Create(Guid deviceId, DateTimeOffset now)
+	{
+		return new LocalDraft
+		{
+			LocalDraftId = Guid.NewGuid(),
+			DeviceId = deviceId,
+			CreatedAt = now,
+			Name = string.Empty,
+			Description = string.Empty,
+			Snapshots = [],
+			EditList = [],
+			Sessions = [],
+			Thumbnail = new LocalThumbnail(),
+			State = new DraftPipelineState(),
+			Remote = null,
+		};
+	}
 }

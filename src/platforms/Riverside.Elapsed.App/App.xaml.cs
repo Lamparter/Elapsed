@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Uno.Resizetizer;
 using Riverside.Elapsed;
 using Riverside.Elapsed.App.ViewModels;
+using Riverside.Elapsed.App.Extensions;
 
 namespace Riverside.Elapsed.App;
 
@@ -85,6 +86,7 @@ public partial class App : Application
 				{
 					// TODO: Register your services
 					//services.AddSingleton<IMyService, MyService>();
+					services.AddDrafts();
 				})
 				.UseNavigation(RegisterRoutes)
 				.UseSerialization(serialization =>
