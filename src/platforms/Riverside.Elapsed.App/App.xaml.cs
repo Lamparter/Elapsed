@@ -87,6 +87,10 @@ public partial class App : Application
 					//services.AddSingleton<IMyService, MyService>();
 				})
 				.UseNavigation(RegisterRoutes)
+				.UseSerialization(serialization =>
+				{
+					serialization.AddSingleton(Constants.SerializerOptions);
+				})
 			);
 		MainWindow = builder.Window;
 
