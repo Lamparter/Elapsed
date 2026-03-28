@@ -88,12 +88,23 @@
 	</PropertyGroup>
 
 	<!-- Deterministic build -->
-	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">
+	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true'">
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<PublishDir>$(CIOutputDirectory)</PublishDir>
 		<PublishDir Condition="'$(IsWeb)' == 'true'">$(WebOutputDirectory)</PublishDir>
 		<PackageOutputPath>$(PublishDir)</PackageOutputPath>
 	</PropertyGroup>
+
+	<Target Condition="'$(IsWeb)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true'" Name="CopyWASMBinaryToArtifactDirectory" AfterTargets="Publish">
+		<MakeDir Directories="$(CIOutputDirectory)" />
+		<ItemGroup>
+			<WASMBinary Include="$(WebOutputDirectory)\**\*.*" />
+		</ItemGroup>
+		<Copy
+			SourceFiles="@(WASMBinary)"
+			DestinationFolder="$(CIOutputDirectory)%(RecursiveDir)"
+			SkipUnchangedFiles="true" />
+	</Target>
 
 	<ItemGroup>
 		<Compile Include="$(SourceDirectory)\GlobalUsings.cs" />
