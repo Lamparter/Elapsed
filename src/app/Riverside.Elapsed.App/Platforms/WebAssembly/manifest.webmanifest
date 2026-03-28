@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "Elapsed",
+  "display": "standalone",
+  "name": "Elapsed",
+  "short_name": "Elapsed",
+  "start_url": "/index.html",
+  "theme_color": "#ec3750",
+  "scope": "/"
+}
