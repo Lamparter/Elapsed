@@ -55,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Preview, Release]
-        platform: [Desktop, Android, iOS]
+        platform: [Desktop, Android, iOS, BrowserWASM]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       PLATFORM: ${{ matrix.platform }}
@@ -310,12 +310,12 @@ jobs:
           }
 
           $appDirs = Get-ChildItem $artifactsRoot -Directory | Where-Object {
-            $_.Name -match "^Riverside\.Elapsed\.App_${selectedConfig}_net10\.0-(Android|Desktop|iOS)$"
+            $_.Name -match "^Riverside\.Elapsed\.App_${selectedConfig}_net10\.0-(Android|Desktop|iOS|BrowserWASM)$"
           }
 
           foreach ($dir in $appDirs) {
             $platform = ([regex]::Match($dir.Name, 'net10\.0-([A-Za-z0-9]+)$')).Groups[1].Value.ToLowerInvariant()
-            $zipPath = Join-Path $releaseAssetsRoot "Hackclub501.HCTG-Elapsed.App_${platform}.zip"
+            $zipPath = Join-Path $releaseAssetsRoot "Hackclub501.Elapsed.App_net10.0-${platform}.zip"
             New-ZipFromFolder -SourceFolder $dir.FullName -DestinationZip $zipPath
           }
 
@@ -324,7 +324,7 @@ jobs:
           }
 
           foreach ($dir in $cliDirs) {
-            $zipPath = Join-Path $releaseAssetsRoot 'Hackclub501.HCTG-Elapsed.CommandLine.zip'
+            $zipPath = Join-Path $releaseAssetsRoot 'Hackclub501.Elapsed.CommandLine.zip'
             New-ZipFromFolder -SourceFolder $dir.FullName -DestinationZip $zipPath
           }
 
@@ -338,7 +338,7 @@ jobs:
             }
 
             foreach ($package in $packageFiles) {
-              $destinationName = "Hackclub501.HCTG-Elapsed$($package.Extension)"
+              $destinationName = "Hackclub501.Elapsed$($package.Extension)"
               Copy-Item -Path $package.FullName -Destination (Join-Path $releaseAssetsRoot $destinationName) -Force
             }
           }
@@ -432,6 +432,69 @@ jobs:
           }
           dotnet nuget push $artifact --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
+  publish-web:
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    needs: [app]
+    runs-on: windows-latest
+    environment:
+      name: Web
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+
+      - name: Detect version file changes
+        id: version_file
+        shell: pwsh
+        run: |
+          $before = "${{ github.event.before }}"
+          $after = "${{ github.sha }}"
+
+          if ($before -eq '0000000000000000000000000000000000000000') {
+            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
+
+          $changedFiles = git diff --name-only $before $after
+          if ($changedFiles -contains 'eng/CurrentVersion.props') {
+            "changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+          else {
+            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - name: Publish release to web
+        if: |
+          steps.version_file.outputs.changed == 'true'
+        id: web_release
+        shell: pwsh
+        run: |
+          cd ".\Riverside.Elapsed.App_Release_net10.0-browserwasm"
+          vercel pull --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --yes --target=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --yes --prebuilt --target=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Publish preview to web
+        if: steps.version_file.outputs.changed != 'true'
+        shell: pwsh
+        run: |
+          cd ".\Riverside.Elapsed.App_Preview_net10.0-browserwasm"
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --yes --target=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --yes --prebuilt --target=preview --token=${{ secrets.VERCEL_TOKEN }}
 
 #  publish-marketplaces:
 #    if: |
