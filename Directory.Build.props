@@ -14,6 +14,7 @@
 		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
 
 		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
+		<WebOutputDirectory>$(RootDirectory)wwwroot\</WebOutputDirectory>
 	</PropertyGroup>
 
 	<Target Name="GetLatestGitTag" Condition="'$(_LatestGitTag)' == ''">
@@ -75,6 +76,8 @@
 		<Configurations>Preview;Release</Configurations>
 		<DefineConstants Condition="'$(Configuration)' == 'Preview'">$(DefineConstants);DEBUG</DefineConstants>
 
+		<IsWeb>$(TargetFramework.Contains('browserwasm'))</IsWeb>
+
 		<!--
 		Remove build warnings:
 			NU1507: Warning when there are multiple package sources when using CPM with no source mapping
@@ -88,7 +91,8 @@
 	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<PublishDir>$(CIOutputDirectory)</PublishDir>
-		<PackageOutputPath>$(CIOutputDirectory)</PackageOutputPath>
+		<PublishDir Condition="'$(IsWeb)' == 'true'">$(WebOutputDirectory)</PublishDir>
+		<PackageOutputPath>$(PublishDir)</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
