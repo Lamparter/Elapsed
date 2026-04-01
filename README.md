@@ -1,6 +1,10 @@
 <!-- Remember to keep the README in src/ up to date with this one. -->
 
 > [!IMPORTANT]
+> <a href="https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU">
+> 	<img src=".github/assets/Source_Hackclub.svg" alt="Find it on Hack Club" height="48" />
+> </a>
+>
 > Elapsed is currently in active development for Hackclub's [Campfire Flagship](https://flagship.hackclub.com) and [Hackclub: The Game](https://game.hackclub.com) programmes.
 > *(this is not double dipping!)*
 >
@@ -30,11 +34,14 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 ## Using Elapsed
 
 <p align="left">
-	<a href="https://apps.microsoft.com/">
-		<img src="https://github.com/Rise-Software/Rise-Media-Player/assets/74561130/3d7edcaf-26d8-4453-a751-29b851721abd" alt="Get it from Microsoft" />
+	<a href="https://elapsed.dino.icu">
+		<img src=".github/assets/Source_Web.svg" alt="Find it on the Web" height="64" />
 	</a>
 	<a href="https://github.com/Lamparter/Elapsed/releases/latest">
-		<img src="https://github.com/Rise-Software/Rise-Media-Player/assets/74561130/60deb402-0c8e-4579-80e6-69cb7b19cd43" alt="Get it from GitHub" />
+		<img src=".github/assets/Source_GitHub.svg" alt="Get it from GitHub" height="64" />
+	</a>
+	<a href="https://nuget.org/packages/Riverside.Elapsed.CommandLine">
+		<img src=".github/assets/Source_NuGet.svg" alt="Get it from NuGet" height="64" />
 	</a>
 </p>
 
