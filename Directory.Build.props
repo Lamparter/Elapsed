@@ -27,12 +27,13 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' == ''">
 			<BetaVersion>1</BetaVersion>
-			<MinorVersion Condition="'$(Configuration)' == 'Preview'">$([MSBuild]::Add($(MinorVersion), 1))</MinorVersion>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
 			<BetaVersion>$([MSBuild]::Add($(_BetaMatch), 1))</BetaVersion>
 		</PropertyGroup>
 		<PropertyGroup>
+			<MinorVersion Condition="'$(Configuration)' == 'Preview'">$([MSBuild]::Add($(MinorVersion), 1))</MinorVersion>
+
 			<Product>Elapsed</Product>
 			<Company>Hackclub</Company>
 
