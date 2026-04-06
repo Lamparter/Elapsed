@@ -5,10 +5,13 @@
 		<LangVersion>14.0</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+
+		<LapseDocsFile>$(RootNamespace).json</LapseDocsFile>
+		<LapseDocsUrl>https://api.lapse.hackclub.com/openapi.json</LapseDocsUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<AdditionalFiles Include="Riverside.Elapsed.json" />
+		<AdditionalFiles Include="$(LapseDocsFile)" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -16,5 +19,13 @@
 		<PackageReference Include="System.Net.Http.Json" Version="10.0.4" />
 		<PackageReference Include="System.Text.Json" Version="10.0.4" />
 	</ItemGroup>
+
+	<Target Name="DownloadSourceGeneratorInput" BeforeTargets="CoreCompile">
+		<DownloadFile
+			SourceUrl="$(LapseDocsUrl)"
+	 		DestinationFolder="$(MSBuildProjectDirectory)"
+			DestinationFileName="$(LapseDocsFile)"
+			SkipUnchangedFiles="true" />
+	</Target>
 
 </Project>
