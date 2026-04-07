@@ -169,6 +169,7 @@ public sealed class TusClient
 			using var limited = new ReadOnlySubStream(src, chunkSize);
 
 			TusOffsetInfo patchInfo;
+			var previousOffset = session.Offset;
 			try
 			{
 				patchInfo = await PatchAsync(session.UploadUrl, session.Offset, limited, chunkSize, ct).ConfigureAwait(false);
@@ -182,7 +183,7 @@ public sealed class TusClient
 			}
 
 			session.Offset = patchInfo.Offset;
-			bytesSentThisCall += chunkSize;
+			bytesSentThisCall += patchInfo.Offset - previousOffset;
 
 			progress?.Report(new TusUploadProgress(bytesSentThisCall, total, session.Offset));
 
@@ -223,7 +224,7 @@ public sealed class TusClient
 			throw new TusOffsetMismatchException("Server returned an Upload-Offset lower than request offset.");
 
 		if (newOffset > uploadOffset + bodyLength)
-		   throw new TusOffsetMismatchException("Server returned an Upload-Offset higher than request offset.");
+			throw new TusOffsetMismatchException("Server returned an Upload-Offset higher than request offset.");
 
 		return new TusOffsetInfo(newOffset, uploadLength: null);
 	}
