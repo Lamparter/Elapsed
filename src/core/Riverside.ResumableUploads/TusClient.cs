@@ -220,8 +220,8 @@ public sealed class TusClient
 		if (!TryGetInt64Header(response, "Upload-Offset", out var newOffset))
 			throw new TusProtocolException("TUS PATCH response missing Upload-Offset.");
 
-		if (newOffset < uploadOffset)
-			throw new TusOffsetMismatchException("Server returned an Upload-Offset lower than request offset.");
+		if (newOffset <= uploadOffset)
+			throw new TusOffsetMismatchException("Server returned an Upload-Offset that did not advance past request offset.");
 
 		if (newOffset > uploadOffset + bodyLength)
 			throw new TusOffsetMismatchException("Server returned an Upload-Offset higher than request offset.");
