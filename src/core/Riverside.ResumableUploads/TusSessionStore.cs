@@ -49,8 +49,6 @@ public sealed class TusSessionStore
 		session.UpdatedAt = DateTimeOffset.UtcNow;
 
 		var mod = _root;
-		//if (mod == null)
-		//	throw new InvalidOperationException("Session cache root folder must implement IModifiableFolder");
 
 		var existing = await TryGetSessionFileAsync(session.Fingerprint, ct).ConfigureAwait(false);
 		var file = existing ?? await mod.CreateFileAsync(GetSessionFileName(session.Fingerprint), overwrite: true).ConfigureAwait(false);
@@ -63,8 +61,6 @@ public sealed class TusSessionStore
 	public async Task DeleteAsync(string fingerprint, CancellationToken ct)
 	{
 		var mod = _root;
-		if (mod == null)
-			return;
 
 		var existing = await TryGetSessionFileAsync(fingerprint, ct).ConfigureAwait(false);
 		if (existing != null)
