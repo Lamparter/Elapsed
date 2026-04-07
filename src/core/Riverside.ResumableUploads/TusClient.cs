@@ -237,10 +237,10 @@ public sealed class TusClient
 		};
 	}
 
-	private static void ValidateTusResumableIfPresent(TusResponse response)
+	private void ValidateTusResumableIfPresent(TusResponse response)
 	{
 		if (response.Headers.TryGetValue("Tus-Resumable", out var v) && 
-			!string.Equals(v?.Trim(), "1.0.0", StringComparison.Ordinal))
+			!string.Equals(v?.Trim(), _options.TusVersion, StringComparison.Ordinal))
 		{
 			throw new TusProtocolException($"Unexpected Tus-Resumable response header: '{v}'.");
 		}
