@@ -222,6 +222,9 @@ public sealed class TusClient
 		if (newOffset < uploadOffset)
 			throw new TusOffsetMismatchException("Server returned an Upload-Offset lower than request offset.");
 
+		if (newOffset > uploadOffset + bodyLength)
+			throw new TusOffsetMismatchException("Server returned an Upload-Offset higher than request offset.")
+
 		return new TusOffsetInfo(newOffset, uploadLength: null);
 	}
 
