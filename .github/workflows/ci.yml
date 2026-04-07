@@ -14,6 +14,7 @@ env:
   APP_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.App\Riverside.Elapsed.App.csproj'
   CLI_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.CommandLine\Riverside.Elapsed.CommandLine.csproj'
   API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed\Riverside.Elapsed.csproj'
+  TUS_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.ResumableUploads\Riverside.ResumableUploads.csproj'
 
 jobs:
   formatting:
@@ -213,11 +214,56 @@ jobs:
           name: 'Riverside.Elapsed_${{ env.CONFIGURATION }}'
           path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}'
 
+  tus:
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Preview, Release]
+    env:
+      CONFIGURATION: ${{ matrix.configuration }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Dependencies
+        uses: "./.github/install_dependencies"
+        with:
+          dotnet-version: 10.0.102
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore
+        run: |
+          msbuild $env:SOLUTION_PATH `
+            -t:Restore `
+            -p:Platform="Any CPU" `
+            -p:Configuration=$env:CONFIGURATION
+
+      - name: Build & publish
+        run: |
+          msbuild $env:TUS_PROJECT_PATH `
+            -t:Publish `
+            -p:Platform="Any CPU" `
+            -p:Configuration=$env:CONFIGURATION
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: 'Riverside.ResumableUploads_${{ env.CONFIGURATION }}'
+          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.CONFIGURATION }}'
+
   publish-releases:
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main'
-    needs: [app, cli, api]
+    needs: [app, cli, api, tus]
     runs-on: windows-latest
     environment:
       name: GitHub Releases
@@ -332,6 +378,10 @@ jobs:
             $_.Name -match "^Riverside\.Elapsed_${selectedConfig}$"
           }
 
+          $tusDirs = Get-ChildItem $artifactsRoot -Directory | Where-Object {
+            $_.Name -match "^Riverside\.ResumableUploads_${selectedConfig}$"
+          }
+
           foreach ($dir in $apiDirs) {
             $packageFiles = Get-ChildItem $dir.FullName -File | Where-Object {
               $_.Extension -in '.nupkg', '.snupkg'
@@ -339,6 +389,17 @@ jobs:
 
             foreach ($package in $packageFiles) {
               $destinationName = "Hackclub501.Elapsed$($package.Extension)"
+              Copy-Item -Path $package.FullName -Destination (Join-Path $releaseAssetsRoot $destinationName) -Force
+            }
+          }
+
+          foreach ($dir in $tusDirs) {
+            $packageFiles = Get-ChildItem $dir.FullName -File | Where-Object {
+              $_.Extension -in '.nupkg', '.snupkg'
+            }
+
+            foreach ($package in $packageFiles) {
+              $destinationName = "Hackclub501.Tus$($package.Extension)"
               Copy-Item -Path $package.FullName -Destination (Join-Path $releaseAssetsRoot $destinationName) -Force
             }
           }
@@ -366,12 +427,12 @@ jobs:
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main'
-    needs: [cli, api]
+    needs: [cli, api, tus]
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        product: [CLI, API]
+        product: [CLI, API, ResumableUploads]
     environment:
       name: NuGet
     env:
@@ -415,6 +476,9 @@ jobs:
           if ($env:PRODUCT -eq "CLI") {
             $artifact=".\Riverside.Elapsed.CommandLine_Release\*.nupkg"
           }
+          elseif ($env:PRODUCT -eq "ResumableUploads") {
+            $artifact=".\Riverside.ResumableUploads_Release\*.nupkg"
+          }
           else {
             $artifact=".\Riverside.Elapsed_Release\*.nupkg"
           }
@@ -426,6 +490,9 @@ jobs:
         run: |
           if ($env:PRODUCT -eq "CLI") {
             $artifact=".\Riverside.Elapsed.CommandLine_Preview\*.nupkg"
+          }
+          elseif ($env:PRODUCT -eq "ResumableUploads") {
+            $artifact=".\Riverside.ResumableUploads_Preview\*.nupkg"
           }
           else {
             $artifact=".\Riverside.Elapsed_Preview\*.nupkg"

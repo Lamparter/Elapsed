@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Using Include="OwlCore.Storage" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Polyfill" Version="9.18.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="OwlCore.Storage" Version="0.15.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="10.0.5" />
+		<PackageReference Include="System.Text.Json" Version="10.0.5" />
+	</ItemGroup>
+</Project>
