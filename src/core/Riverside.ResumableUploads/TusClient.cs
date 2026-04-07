@@ -139,7 +139,7 @@ public sealed class TusClient
 		if (session is null)
 			throw new ArgumentNullException(nameof(session));
 		if (sourceFile is null)
-			throw new ArgumentNullException(nameof(session));
+			throw new ArgumentNullException(nameof(sourceFile));
 
 		var total = session.UploadLength;
 		long bytesSentThisCall = 0;
@@ -196,7 +196,7 @@ public sealed class TusClient
 			Headers = headers,
 			Body = body,
 			ContentLength = bodyLength,
-			ContentType = "application/offset+octect-stream",
+			ContentType = "application/offset+octet-stream",
 		}, ct).ConfigureAwait(false);
 
 		ValidateTusResumableIfPresent(response);
