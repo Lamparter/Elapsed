@@ -16,7 +16,7 @@ public sealed class HttpClientTusTransport : ITusTransport
 		if (request is null)
 			throw new ArgumentNullException(nameof(request));
 
-		var msg = new HttpRequestMessage(request.Method, request.Url);
+		using var msg = new HttpRequestMessage(request.Method, request.Url);
 
 		foreach (var kvp in request.Headers)
 			msg.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
@@ -43,6 +43,10 @@ public sealed class HttpClientTusTransport : ITusTransport
 			Content = response.Content,
 		};
 
+		// Transfer ownership of the HttpResponseMessage to TusResponse so the response
+		// (and its content stream) stays alive until the caller is done reading it.
+		result.SetOwner(response);
+
 		foreach (var header in response.Headers)
 			result.Headers[header.Key] = string.Join(",", header.Value);
 
@@ -52,7 +56,6 @@ public sealed class HttpClientTusTransport : ITusTransport
 				result.Headers[header.Key] = string.Join(",", header.Value);
 		}
 
-		response.Dispose();
 		return result;
 	}
 }
