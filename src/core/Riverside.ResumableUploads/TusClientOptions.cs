@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace OwlCore.Storage.Tus;
+namespace Riverside.ResumableUploads;
 
 public sealed class TusClientOptions
 {

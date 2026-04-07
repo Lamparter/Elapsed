@@ -1,4 +1,4 @@
-namespace OwlCore.Storage.Tus;
+namespace Riverside.ResumableUploads;
 
 public class TusProtocolException : Exception
 {

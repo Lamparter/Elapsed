@@ -1,6 +1,6 @@
 using System.Net.Http.Headers;
 
-namespace OwlCore.Storage.Tus;
+namespace Riverside.ResumableUploads;
 
 public sealed class HttpClientTusTransport : ITusTransport
 {

@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text;
 
-namespace OwlCore.Storage.Tus;
+namespace Riverside.ResumableUploads;
 
 public sealed class TusClient
 {

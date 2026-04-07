@@ -1,4 +1,4 @@
-namespace OwlCore.Storage.Tus;
+namespace Riverside.ResumableUploads;
 
 public sealed class TusSession
 {
