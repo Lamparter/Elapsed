@@ -153,16 +153,16 @@ public sealed class TusClient
 		var total = session.UploadLength;
 		long bytesSentThisCall = 0;
 
+		using var src = await sourceFile.OpenReadAsync().ConfigureAwait(false);
+		if (!src.CanSeek)
+			throw new NotSupportedException("The source file stream must be seekable to upload from arbitrary offsets. Add a cache/materialise step for non-seekable sources.");
+
 		while (session.Offset < total)
 		{
 			ct.ThrowIfCancellationRequested();
 
 			var remaining = total - session.Offset;
 			var chunkSize = (int)Math.Min(_options.ChunkSizeBytes, remaining);
-
-			using var src = await sourceFile.OpenReadAsync().ConfigureAwait(false);
-			if (!src.CanSeek)
-				throw new NotSupportedException("The source file stream must be seekable to upload from arbitrary offsets. Add a cache/materialise step for non-seekable sources.");
 
 			src.Seek(session.Offset, SeekOrigin.Begin);
 
@@ -223,7 +223,7 @@ public sealed class TusClient
 			throw new TusOffsetMismatchException("Server returned an Upload-Offset lower than request offset.");
 
 		if (newOffset > uploadOffset + bodyLength)
-			throw new TusOffsetMismatchException("Server returned an Upload-Offset higher than request offset.")
+		   throw new TusOffsetMismatchException("Server returned an Upload-Offset higher than request offset.");
 
 		return new TusOffsetInfo(newOffset, uploadLength: null);
 	}
