@@ -65,6 +65,15 @@ public sealed class TusClient
 		Dictionary<string, string> metadata,
 		CancellationToken ct = default)
 	{
+		if (string.IsNullOrWhiteSpace(fingerprint))
+			throw new ArgumentException("Fingerprint is required.", nameof(fingerprint));
+		if (creationEndpoint is null)
+			throw new ArgumentNullException(nameof(creationEndpoint));
+		if (uploadLength <= 0)
+			throw new ArgumentOutOfRangeException(nameof(uploadLength));
+		if (metadata is null)
+			throw new ArgumentNullException(nameof(metadata));
+
 		var headers = BaseTusHeaders();
 		headers["Upload-Length"] = uploadLength.ToString(CultureInfo.InvariantCulture);
 
