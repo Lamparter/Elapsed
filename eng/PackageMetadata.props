@@ -16,6 +16,7 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 
 		<PackageIcon>PackageLogo.png</PackageIcon>
+		<PackageIcon Condition="$(MSBuildProjectName.Contains('ResumableUploads'))">PackageLogo_Tus.png</PackageIcon>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -35,7 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="$(BuildDirectory)\PackageLogo.png">
+		<None Include="$(BuildDirectory)\$(PackageIcon)">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
