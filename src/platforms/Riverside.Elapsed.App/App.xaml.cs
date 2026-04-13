@@ -3,6 +3,7 @@ using Uno.Resizetizer;
 using Riverside.Elapsed;
 using Riverside.Elapsed.App.ViewModels;
 using Riverside.Elapsed.App.Extensions;
+using Riverside.Elapsed.App.ViewModels.Timelapses.Drafts;
 
 namespace Riverside.Elapsed.App;
 
@@ -123,16 +124,22 @@ public partial class App : Application
 			new ViewMap(ViewModel: typeof(ShellViewModel)),
 			new ViewMap<LoginPage, LoginViewModel>(),
 			new ViewMap<MainPage, MainViewModel>(),
-			new DataViewMap<SecondPage, SecondViewModel, Entity>()
+			new DataViewMap<SecondPage, SecondViewModel, Entity>(),
+
+			new ViewMap<DraftsPage, DraftsViewModel>(),
+			new DataViewMap<DraftDetailsPage, DraftDetailsViewModel, DraftListItem>(),
 		);
 
 		routes.Register(
 			new RouteMap("", View: views.FindByViewModel<ShellViewModel>(),
 				Nested:
 				[
-					new ("Login", View: views.FindByViewModel<LoginViewModel>()),
-					new ("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault:true),
-					new ("Second", View: views.FindByViewModel<SecondViewModel>()),
+					new("Login", View: views.FindByViewModel<LoginViewModel>()),
+					new("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault:true),
+					new("Second", View: views.FindByViewModel<SecondViewModel>()),
+
+					new("Drafts", View: views.FindByViewModel<DraftsViewModel>()),
+					new("Draft", View: views.FindByViewModel<DraftDetailsViewModel>()),
 				]
 			)
 		);
