@@ -858,7 +858,7 @@ public class Program
 					GroupName: groupName,
 					CommandName: operationName,
 					OperationPath: $"{groupName}/{operationName}",
-                    Description: GetOperationDescription($"{groupName}/{operationName}", httpMethod, operationMethod)
+					Description: GetOperationDescription($"{groupName}/{operationName}", httpMethod, operationMethod)
 						?? $"{httpMethod} {groupName}/{operationName}",
 					HttpMethod: httpMethod,
 					BuilderPath: [group, endpoint],
@@ -906,6 +906,7 @@ public class Program
 			foreach (var pathProperty in pathsElement.EnumerateObject())
 			{
 				var operationPath = pathProperty.Name.TrimStart('/');
+				var normalizedOperationPath = NormalizeOpenApiPathForCommand(operationPath);
 				if (pathProperty.Value.ValueKind != JsonValueKind.Object)
 				{
 					continue;
@@ -926,6 +927,7 @@ public class Program
 					}
 
 					descriptions[$"{method}:{operationPath}"] = description;
+					descriptions[$"{method}:{normalizedOperationPath}"] = description;
 				}
 			}
 		}
@@ -934,6 +936,15 @@ public class Program
 		}
 
 		return descriptions;
+	}
+
+	private static string NormalizeOpenApiPathForCommand(string operationPath)
+	{
+		var parts = operationPath
+			.Split('/', StringSplitOptions.RemoveEmptyEntries)
+			.Select(part => ToKebabCase(NormalizeKeywordPropertyName(part)));
+
+		return string.Join('/', parts);
 	}
 
 	private static string? FindOpenApiDocumentPath()
