@@ -954,20 +954,10 @@ public class Program
 		{
 			return outputPath;
 		}
-
-		var current = new DirectoryInfo(AppContext.BaseDirectory);
-		for (var i = 0; i < 8 && current is not null; i++)
+		else
 		{
-			var candidate = Path.Combine(current.FullName, "src", "core", "Riverside.Elapsed", "Riverside.Elapsed.json");
-			if (File.Exists(candidate))
-			{
-				return candidate;
-			}
-
-			current = current.Parent;
+			throw new FileNotFoundException("The Lapse API documentation is missing from the app installation directory.");
 		}
-
-		return null;
 	}
 
 	private static string? GetDescriptionValue(JsonElement operationElement)
