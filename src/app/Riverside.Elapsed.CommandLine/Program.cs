@@ -13,6 +13,9 @@ namespace Riverside.Elapsed.CommandLine;
 
 public class Program
 {
+	private sealed record ParameterOptionBinding(string Key, PropertyInfo Property, Option<string?> Option);
+	private static readonly Lazy<Dictionary<string, string>> OperationDescriptions = new(LoadOperationDescriptions);
+
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
 		WriteIndented = true,
@@ -22,31 +25,31 @@ public class Program
 	private static readonly Option<string?> BaseUrlOption = new("--base-url")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Lapse API base URL.",
+		Description = "Lapse API base URL",
 	};
 
 	private static readonly Option<string?> TokenOption = new("--token")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Bearer token for authenticated endpoints.",
+		Description = "Bearer token for authenticated endpoints",
 	};
 
 	private static readonly Option<FileInfo?> TokenFileOption = new("--token-file")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Path to a file containing a bearer token.",
+		Description = "Path to a file containing a bearer token",
 	};
 
 	private static readonly Option<string?> BodyJsonOption = new("--body-json")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Inline JSON request body.",
+		Description = "Inline JSON request body",
 	};
 
 	private static readonly Option<FileInfo?> BodyFileOption = new("--body-file")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Path to JSON file containing request body.",
+		Description = "Path to JSON file containing request body",
 	};
 
 	private static readonly Option<string[]> QueryOption = new("--query")
@@ -77,12 +80,12 @@ public class Program
 
 	private static Command BuildConfigCommand()
 	{
-		var config = new Command("config") { Description = "Manage persisted CLI configuration." };
+		var config = new Command("config") { Description = "Manage persisted CLI configuration" };
 
-		var setToken = new Command("set-token") { Description = "Persist a bearer token for future runs." };
+		var setToken = new Command("set-token") { Description = "Persist a bearer token for future runs" };
 		var tokenArg = new Argument<string>("token")
 		{
-			Description = "Bearer token value.",
+			Description = "Bearer token value",
 		};
 		setToken.Add(tokenArg);
 		setToken.SetAction(parseResult =>
@@ -95,7 +98,7 @@ public class Program
 			return 0;
 		});
 
-		var clearToken = new Command("clear-token") { Description = "Clear persisted bearer token." };
+		var clearToken = new Command("clear-token") { Description = "Clear persisted bearer token" };
 		clearToken.SetAction(_ =>
 		{
 			var cfg = LoadConfig();
@@ -105,7 +108,7 @@ public class Program
 			return 0;
 		});
 
-		var show = new Command("show") { Description = "Show current CLI configuration." };
+		var show = new Command("show") { Description = "Show current CLI configuration" };
 		show.SetAction(_ =>
 		{
 			var cfg = LoadConfig();
@@ -120,7 +123,7 @@ public class Program
 			return 0;
 		});
 
-		var auth = new Command("auth") { Description = "Authenticate online to get a bearer token." };
+		var auth = new Command("auth") { Description = "Authenticate online to get a bearer token" };
 		auth.SetAction(async _ =>
 		{
 			return await HandleAuthAsync();
@@ -255,12 +258,12 @@ public class Program
 
 	private static Command BuildListOperationsCommand()
 	{
-		var list = new Command("list-operations") { Description = "List all generated API operations that are available." };
+		var list = new Command("list-operations") { Description = "List all generated API operations that are available" };
 		list.SetAction(_ =>
 		{
 			foreach (var descriptor in GetOperationDescriptors().OrderBy(x => x.OperationPath))
 			{
-				Console.WriteLine($"{descriptor.OperationPath} [{descriptor.HttpMethod}]");
+				Console.WriteLine($"{descriptor.HttpOperationPath} [{descriptor.HttpMethod}]");
 			}
 
 			return 0;
@@ -275,17 +278,38 @@ public class Program
 
 		foreach (var group in grouped)
 		{
-			var groupCommand = new Command(group.Key) { Description = $"Operations under /{group.Key}" };
+			var httpGroupPath = ToCamelCaseFromKebab(group.Key);
+			var groupCommand = new Command(group.Key) { Description = $"Operations under /{httpGroupPath}" };
 			foreach (var operation in group.OrderBy(x => x.CommandName))
 			{
 				var opCommand = new Command(operation.CommandName) { Description = operation.Description };
-				opCommand.Add(QueryOption);
+				var usedAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+				{
+					"--query",
+					"--body-json",
+					"--body-file",
+				};
+
+				var queryOptionBindings = BuildParameterOptionBindings(operation.QueryParametersType, isQueryParameter: true, usedAliases);
+				var bodyOptionBindings = BuildParameterOptionBindings(operation.RequestBodyType, isQueryParameter: false, usedAliases);
+
+				//opCommand.Add(QueryOption);
 				opCommand.Add(BodyJsonOption);
 				opCommand.Add(BodyFileOption);
 
+				foreach (var binding in queryOptionBindings)
+				{
+					opCommand.Add(binding.Option);
+				}
+
+				foreach (var binding in bodyOptionBindings)
+				{
+					opCommand.Add(binding.Option);
+				}
+
 				opCommand.SetAction(async (parseResult, cancellationToken) =>
 				{
-					return await ExecuteOperationAsync(operation, parseResult, cancellationToken);
+					return await ExecuteOperationAsync(operation, parseResult, cancellationToken, queryOptionBindings, bodyOptionBindings);
 				});
 
 				groupCommand.Add(opCommand);
@@ -297,7 +321,12 @@ public class Program
 		return commands;
 	}
 
-	private static async Task<int> ExecuteOperationAsync(OperationDescriptor operation, ParseResult parseResult, CancellationToken cancellationToken)
+	private static async Task<int> ExecuteOperationAsync(
+		OperationDescriptor operation,
+		ParseResult parseResult,
+		CancellationToken cancellationToken,
+		IReadOnlyList<ParameterOptionBinding> queryOptionBindings,
+		IReadOnlyList<ParameterOptionBinding> bodyOptionBindings)
 	{
 		try
 		{
@@ -320,8 +349,9 @@ public class Program
 			var builder = ResolveBuilder(client, operation.BuilderPath);
 
 			var bodyJson = ResolveBodyJson(parseResult);
-			var bodyArg = BuildBodyArgument(operation.RequestBodyType, bodyJson);
 			var queryMap = ParseQueryValues(parseResult.GetValue(QueryOption) ?? []);
+			ApplyNamedQueryOptionValues(queryMap, queryOptionBindings, parseResult);
+			var bodyArg = BuildBodyArgument(operation.RequestBodyType, bodyJson, bodyOptionBindings, parseResult);
 			var requestConfigArg = BuildRequestConfigurationArgument(operation.RequestConfigurationType, operation.QueryParametersType, queryMap);
 
 			var args = BuildMethodArgs(operation.OperationMethod, bodyArg, requestConfigArg, cancellationToken);
@@ -349,6 +379,91 @@ public class Program
 		{
 			Console.Error.WriteLine($"Operation failed: {ex.Message}");
 			return 1;
+		}
+	}
+
+	private static IReadOnlyList<ParameterOptionBinding> BuildParameterOptionBindings(Type? modelType, bool isQueryParameter, HashSet<string> usedAliases)
+	{
+		if (modelType is null)
+		{
+			return [];
+		}
+
+		var bindings = new List<ParameterOptionBinding>();
+		var properties = modelType
+			.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+			.Where(p => p.CanWrite && p.SetMethod?.IsPublic == true)
+			.Where(p => p.Name != "AdditionalData")
+			.OrderBy(p => p.Name);
+
+		foreach (var property in properties)
+		{
+			var key = isQueryParameter ? GetQueryKey(property) : property.Name;
+			var preferredName = ToOptionName(key);
+			if (string.IsNullOrWhiteSpace(preferredName))
+			{
+				preferredName = ToOptionName(property.Name);
+			}
+
+			var alias = $"--{preferredName}";
+			if (!usedAliases.Add(alias))
+			{
+				alias = isQueryParameter
+					? $"--query-{preferredName}"
+					: $"--body-{preferredName}";
+
+				if (!usedAliases.Add(alias))
+				{
+					continue;
+				}
+			}
+
+			var option = new Option<string?>(alias)
+			{
+				Arity = ArgumentArity.ZeroOrOne,
+				Description = isQueryParameter
+					? $"Query parameter '{key}'"
+					: $"Request body field '{property.Name}'",
+			};
+
+			bindings.Add(new ParameterOptionBinding(key, property, option));
+		}
+
+		return bindings;
+	}
+
+	private static string ToOptionName(string value)
+	{
+		var decoded = Uri.UnescapeDataString(value).Trim();
+		decoded = decoded.TrimStart('$', '@');
+		var cleaned = new string(decoded
+			.Select(c => char.IsLetterOrDigit(c) || c == '-' || c == '_' ? c : '-')
+			.ToArray())
+			.Trim('-');
+
+		if (string.IsNullOrWhiteSpace(cleaned))
+		{
+			return string.Empty;
+		}
+
+		cleaned = cleaned.Replace('_', '-');
+		return ToKebabCase(cleaned);
+	}
+
+	private static void ApplyNamedQueryOptionValues(
+		IDictionary<string, string> queryMap,
+		IReadOnlyList<ParameterOptionBinding> queryOptionBindings,
+		ParseResult parseResult)
+	{
+		foreach (var binding in queryOptionBindings)
+		{
+			var value = parseResult.GetValue(binding.Option);
+			if (value is null)
+			{
+				continue;
+			}
+
+			queryMap[binding.Key] = value;
 		}
 	}
 
@@ -408,8 +523,22 @@ public class Program
 		return bodyJson;
 	}
 
-	private static object? BuildBodyArgument(Type? bodyType, string? bodyJson)
+	private static object? BuildBodyArgument(
+		Type? bodyType,
+		string? bodyJson,
+		IReadOnlyList<ParameterOptionBinding> bodyOptionBindings,
+		ParseResult parseResult)
 	{
+		var hasBodyOptions = false;
+		foreach (var binding in bodyOptionBindings)
+		{
+			if (parseResult.GetValue(binding.Option) is not null)
+			{
+				hasBodyOptions = true;
+				break;
+			}
+		}
+
 		if (bodyType is null)
 		{
 			if (!string.IsNullOrWhiteSpace(bodyJson))
@@ -417,7 +546,37 @@ public class Program
 				throw new InvalidOperationException("This endpoint does not accept a request body.");
 			}
 
+			if (hasBodyOptions)
+			{
+				throw new InvalidOperationException("This endpoint does not accept request body fields.");
+			}
+
 			return null;
+		}
+
+		if (!string.IsNullOrWhiteSpace(bodyJson) && hasBodyOptions)
+		{
+			throw new InvalidOperationException("Use either --body-json/--body-file or body field options, not both.");
+		}
+
+		if (hasBodyOptions)
+		{
+			var bodyObject = Activator.CreateInstance(bodyType)
+				?? throw new InvalidOperationException($"Could not construct request body type {bodyType.FullName}.");
+
+			foreach (var binding in bodyOptionBindings)
+			{
+				var value = parseResult.GetValue(binding.Option);
+				if (value is null)
+				{
+					continue;
+				}
+
+				var converted = ConvertString(value, binding.Property.PropertyType);
+				binding.Property.SetValue(bodyObject, converted);
+			}
+
+			return bodyObject;
 		}
 
 		if (string.IsNullOrWhiteSpace(bodyJson))
@@ -672,6 +831,7 @@ public class Program
 		foreach (var group in topLevelGroups)
 		{
 			var groupName = ToKebabCase(NormalizeKeywordPropertyName(group.Name));
+			var httpGroupName = ToCamelCase(NormalizeKeywordPropertyName(group.Name));
 			var endpointProperties = group.PropertyType
 				.GetProperties(BindingFlags.Public | BindingFlags.Instance)
 				.Where(p => IsRequestBuilderType(p.PropertyType))
@@ -690,6 +850,7 @@ public class Program
 				var requestConfigType = FindRequestConfigurationType(operationMethod);
 				var queryType = FindQueryType(requestConfigType);
 				var operationName = ToKebabCase(NormalizeKeywordPropertyName(endpoint.Name));
+				var httpOperationName = ToCamelCase(NormalizeKeywordPropertyName(endpoint.Name));
 				var httpMethod = operationMethod.Name.StartsWith("Get", StringComparison.Ordinal) ? "GET"
 					: operationMethod.Name.StartsWith("Post", StringComparison.Ordinal) ? "POST"
 					: operationMethod.Name.StartsWith("Patch", StringComparison.Ordinal) ? "PATCH"
@@ -700,7 +861,9 @@ public class Program
 					GroupName: groupName,
 					CommandName: operationName,
 					OperationPath: $"{groupName}/{operationName}",
-					Description: GetSummary(operationMethod) ?? $"{httpMethod} {groupName}/{operationName}",
+					HttpOperationPath: $"{httpGroupName}/{httpOperationName}",
+					Description: GetOperationDescription($"{groupName}/{operationName}", httpMethod, operationMethod)
+						?? $"{httpMethod} {httpGroupName}/{httpOperationName}",
 					HttpMethod: httpMethod,
 					BuilderPath: [group, endpoint],
 					OperationMethod: operationMethod,
@@ -713,6 +876,107 @@ public class Program
 		}
 
 		return results;
+	}
+
+	private static string? GetOperationDescription(string operationPath, string httpMethod, MethodInfo method)
+	{
+		var key = $"{httpMethod}:{operationPath}";
+		if (OperationDescriptions.Value.TryGetValue(key, out var description) && !string.IsNullOrWhiteSpace(description))
+		{
+			return description;
+		}
+
+		return GetSummary(method);
+	}
+
+	private static Dictionary<string, string> LoadOperationDescriptions()
+	{
+		var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		try
+		{
+			var documentPath = FindOpenApiDocumentPath();
+			if (string.IsNullOrWhiteSpace(documentPath) || !File.Exists(documentPath))
+			{
+				return descriptions;
+			}
+
+			using var stream = File.OpenRead(documentPath);
+			using var document = JsonDocument.Parse(stream);
+			if (!document.RootElement.TryGetProperty("paths", out var pathsElement))
+			{
+				return descriptions;
+			}
+
+			foreach (var pathProperty in pathsElement.EnumerateObject())
+			{
+				var operationPath = pathProperty.Name.TrimStart('/');
+				var normalizedOperationPath = NormalizeOpenApiPathForCommand(operationPath);
+				if (pathProperty.Value.ValueKind != JsonValueKind.Object)
+				{
+					continue;
+				}
+
+				foreach (var methodProperty in pathProperty.Value.EnumerateObject())
+				{
+					if (methodProperty.Value.ValueKind != JsonValueKind.Object)
+					{
+						continue;
+					}
+
+					var method = methodProperty.Name.ToUpperInvariant();
+					var description = GetDescriptionValue(methodProperty.Value);
+					if (string.IsNullOrWhiteSpace(description))
+					{
+						continue;
+					}
+
+					descriptions[$"{method}:{operationPath}"] = description;
+					descriptions[$"{method}:{normalizedOperationPath}"] = description;
+				}
+			}
+		}
+		catch { }
+
+		return descriptions;
+	}
+
+	private static string NormalizeOpenApiPathForCommand(string operationPath)
+	{
+		var parts = operationPath
+			.Split('/', StringSplitOptions.RemoveEmptyEntries)
+			.Select(part => ToKebabCase(NormalizeKeywordPropertyName(part)));
+
+		return string.Join('/', parts);
+	}
+
+	private static string? FindOpenApiDocumentPath()
+	{
+		var outputPath = Path.Combine(AppContext.BaseDirectory, "Riverside.Elapsed.json");
+		if (File.Exists(outputPath))
+		{
+			return outputPath;
+		}
+		else
+		{
+			throw new FileNotFoundException("The Lapse API documentation is missing from the app installation directory.");
+		}
+	}
+
+	private static string? GetDescriptionValue(JsonElement operationElement)
+	{
+		if (operationElement.TryGetProperty("description", out var descriptionElement)
+			&& descriptionElement.ValueKind == JsonValueKind.String)
+		{
+			return descriptionElement.GetString()?.Trim();
+		}
+
+		if (operationElement.TryGetProperty("summary", out var summaryElement)
+			&& summaryElement.ValueKind == JsonValueKind.String)
+		{
+			return summaryElement.GetString()?.Trim();
+		}
+
+		return null;
 	}
 
 	private static string? GetSummary(MethodInfo method)
@@ -828,6 +1092,55 @@ public class Program
 			else
 			{
 				sb.Append(c);
+			}
+		}
+
+		return sb.ToString();
+	}
+
+	private static string ToCamelCase(string value)
+	{
+		if (string.IsNullOrEmpty(value))
+		{
+			return value;
+		}
+
+		if (value.Length == 1)
+		{
+			return char.ToLowerInvariant(value[0]).ToString();
+		}
+
+		return char.ToLowerInvariant(value[0]) + value[1..];
+	}
+
+	private static string ToCamelCaseFromKebab(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			return value;
+		}
+
+		var parts = value.Split('-', StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length == 0)
+		{
+			return string.Empty;
+		}
+
+		var sb = new StringBuilder();
+		sb.Append(parts[0].ToLowerInvariant());
+
+		for (var i = 1; i < parts.Length; i++)
+		{
+			var part = parts[i].ToLowerInvariant();
+			if (part.Length == 0)
+			{
+				continue;
+			}
+
+			sb.Append(char.ToUpperInvariant(part[0]));
+			if (part.Length > 1)
+			{
+				sb.Append(part[1..]);
 			}
 		}
 

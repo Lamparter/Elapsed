@@ -6,6 +6,7 @@ internal sealed record OperationDescriptor(
 	string GroupName,
 	string CommandName,
 	string OperationPath,
+	string HttpOperationPath,
 	string Description,
 	string HttpMethod,
 	IReadOnlyList<PropertyInfo> BuilderPath,
