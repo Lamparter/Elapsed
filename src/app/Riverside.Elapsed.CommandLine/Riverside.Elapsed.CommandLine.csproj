@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="$(MSBuildThisFileDirectory)..\..\core\Riverside.Elapsed\Riverside.Elapsed.json">
+		<Content Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.json">
 			<Link>Riverside.Elapsed.json</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<Pack>true</Pack>
