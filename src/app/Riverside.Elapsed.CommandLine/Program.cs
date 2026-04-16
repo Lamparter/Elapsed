@@ -935,9 +935,7 @@ public class Program
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch { }
 
 		return descriptions;
 	}
