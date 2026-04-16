@@ -291,7 +291,7 @@ public class Program
 				var queryOptionBindings = BuildParameterOptionBindings(operation.QueryParametersType, isQueryParameter: true, usedAliases);
 				var bodyOptionBindings = BuildParameterOptionBindings(operation.RequestBodyType, isQueryParameter: false, usedAliases);
 
-				opCommand.Add(QueryOption);
+				//opCommand.Add(QueryOption);
 				opCommand.Add(BodyJsonOption);
 				opCommand.Add(BodyFileOption);
 
