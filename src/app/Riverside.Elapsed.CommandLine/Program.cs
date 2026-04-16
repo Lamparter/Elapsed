@@ -14,6 +14,7 @@ namespace Riverside.Elapsed.CommandLine;
 public class Program
 {
 	private sealed record ParameterOptionBinding(string Key, PropertyInfo Property, Option<string?> Option);
+	private static readonly Lazy<Dictionary<string, string>> OperationDescriptions = new(LoadOperationDescriptions);
 
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
@@ -857,7 +858,8 @@ public class Program
 					GroupName: groupName,
 					CommandName: operationName,
 					OperationPath: $"{groupName}/{operationName}",
-					Description: GetSummary(operationMethod) ?? $"{httpMethod} {groupName}/{operationName}",
+                    Description: GetOperationDescription($"{groupName}/{operationName}", httpMethod, operationMethod)
+						?? $"{httpMethod} {groupName}/{operationName}",
 					HttpMethod: httpMethod,
 					BuilderPath: [group, endpoint],
 					OperationMethod: operationMethod,
@@ -870,6 +872,108 @@ public class Program
 		}
 
 		return results;
+	}
+
+	private static string? GetOperationDescription(string operationPath, string httpMethod, MethodInfo method)
+	{
+		var key = $"{httpMethod}:{operationPath}";
+		if (OperationDescriptions.Value.TryGetValue(key, out var description) && !string.IsNullOrWhiteSpace(description))
+		{
+			return description;
+		}
+
+		return GetSummary(method);
+	}
+
+	private static Dictionary<string, string> LoadOperationDescriptions()
+	{
+		var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		try
+		{
+			var documentPath = FindOpenApiDocumentPath();
+			if (string.IsNullOrWhiteSpace(documentPath) || !File.Exists(documentPath))
+			{
+				return descriptions;
+			}
+
+			using var stream = File.OpenRead(documentPath);
+			using var document = JsonDocument.Parse(stream);
+			if (!document.RootElement.TryGetProperty("paths", out var pathsElement))
+			{
+				return descriptions;
+			}
+
+			foreach (var pathProperty in pathsElement.EnumerateObject())
+			{
+				var operationPath = pathProperty.Name.TrimStart('/');
+				if (pathProperty.Value.ValueKind != JsonValueKind.Object)
+				{
+					continue;
+				}
+
+				foreach (var methodProperty in pathProperty.Value.EnumerateObject())
+				{
+					if (methodProperty.Value.ValueKind != JsonValueKind.Object)
+					{
+						continue;
+					}
+
+					var method = methodProperty.Name.ToUpperInvariant();
+					var description = GetDescriptionValue(methodProperty.Value);
+					if (string.IsNullOrWhiteSpace(description))
+					{
+						continue;
+					}
+
+					descriptions[$"{method}:{operationPath}"] = description;
+				}
+			}
+		}
+		catch
+		{
+		}
+
+		return descriptions;
+	}
+
+	private static string? FindOpenApiDocumentPath()
+	{
+		var outputPath = Path.Combine(AppContext.BaseDirectory, "Riverside.Elapsed.json");
+		if (File.Exists(outputPath))
+		{
+			return outputPath;
+		}
+
+		var current = new DirectoryInfo(AppContext.BaseDirectory);
+		for (var i = 0; i < 8 && current is not null; i++)
+		{
+			var candidate = Path.Combine(current.FullName, "src", "core", "Riverside.Elapsed", "Riverside.Elapsed.json");
+			if (File.Exists(candidate))
+			{
+				return candidate;
+			}
+
+			current = current.Parent;
+		}
+
+		return null;
+	}
+
+	private static string? GetDescriptionValue(JsonElement operationElement)
+	{
+		if (operationElement.TryGetProperty("description", out var descriptionElement)
+			&& descriptionElement.ValueKind == JsonValueKind.String)
+		{
+			return descriptionElement.GetString()?.Trim();
+		}
+
+		if (operationElement.TryGetProperty("summary", out var summaryElement)
+			&& summaryElement.ValueKind == JsonValueKind.String)
+		{
+			return summaryElement.GetString()?.Trim();
+		}
+
+		return null;
 	}
 
 	private static string? GetSummary(MethodInfo method)
