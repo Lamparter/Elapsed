@@ -13,6 +13,8 @@ namespace Riverside.Elapsed.CommandLine;
 
 public class Program
 {
+	private sealed record ParameterOptionBinding(string Key, PropertyInfo Property, Option<string?> Option);
+
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
 		WriteIndented = true,
@@ -279,13 +281,33 @@ public class Program
 			foreach (var operation in group.OrderBy(x => x.CommandName))
 			{
 				var opCommand = new Command(operation.CommandName) { Description = operation.Description };
+				var usedAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+				{
+					"--query",
+					"--body-json",
+					"--body-file",
+				};
+
+				var queryOptionBindings = BuildParameterOptionBindings(operation.QueryParametersType, isQueryParameter: true, usedAliases);
+				var bodyOptionBindings = BuildParameterOptionBindings(operation.RequestBodyType, isQueryParameter: false, usedAliases);
+
 				opCommand.Add(QueryOption);
 				opCommand.Add(BodyJsonOption);
 				opCommand.Add(BodyFileOption);
 
+				foreach (var binding in queryOptionBindings)
+				{
+					opCommand.Add(binding.Option);
+				}
+
+				foreach (var binding in bodyOptionBindings)
+				{
+					opCommand.Add(binding.Option);
+				}
+
 				opCommand.SetAction(async (parseResult, cancellationToken) =>
 				{
-					return await ExecuteOperationAsync(operation, parseResult, cancellationToken);
+					return await ExecuteOperationAsync(operation, parseResult, cancellationToken, queryOptionBindings, bodyOptionBindings);
 				});
 
 				groupCommand.Add(opCommand);
@@ -297,7 +319,12 @@ public class Program
 		return commands;
 	}
 
-	private static async Task<int> ExecuteOperationAsync(OperationDescriptor operation, ParseResult parseResult, CancellationToken cancellationToken)
+	private static async Task<int> ExecuteOperationAsync(
+		OperationDescriptor operation,
+		ParseResult parseResult,
+		CancellationToken cancellationToken,
+		IReadOnlyList<ParameterOptionBinding> queryOptionBindings,
+		IReadOnlyList<ParameterOptionBinding> bodyOptionBindings)
 	{
 		try
 		{
@@ -320,8 +347,9 @@ public class Program
 			var builder = ResolveBuilder(client, operation.BuilderPath);
 
 			var bodyJson = ResolveBodyJson(parseResult);
-			var bodyArg = BuildBodyArgument(operation.RequestBodyType, bodyJson);
 			var queryMap = ParseQueryValues(parseResult.GetValue(QueryOption) ?? []);
+			ApplyNamedQueryOptionValues(queryMap, queryOptionBindings, parseResult);
+			var bodyArg = BuildBodyArgument(operation.RequestBodyType, bodyJson, bodyOptionBindings, parseResult);
 			var requestConfigArg = BuildRequestConfigurationArgument(operation.RequestConfigurationType, operation.QueryParametersType, queryMap);
 
 			var args = BuildMethodArgs(operation.OperationMethod, bodyArg, requestConfigArg, cancellationToken);
@@ -349,6 +377,91 @@ public class Program
 		{
 			Console.Error.WriteLine($"Operation failed: {ex.Message}");
 			return 1;
+		}
+	}
+
+	private static IReadOnlyList<ParameterOptionBinding> BuildParameterOptionBindings(Type? modelType, bool isQueryParameter, HashSet<string> usedAliases)
+	{
+		if (modelType is null)
+		{
+			return [];
+		}
+
+		var bindings = new List<ParameterOptionBinding>();
+		var properties = modelType
+			.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+			.Where(p => p.CanWrite && p.SetMethod?.IsPublic == true)
+			.Where(p => p.Name != "AdditionalData")
+			.OrderBy(p => p.Name);
+
+		foreach (var property in properties)
+		{
+			var key = isQueryParameter ? GetQueryKey(property) : property.Name;
+			var preferredName = ToOptionName(key);
+			if (string.IsNullOrWhiteSpace(preferredName))
+			{
+				preferredName = ToOptionName(property.Name);
+			}
+
+			var alias = $"--{preferredName}";
+			if (!usedAliases.Add(alias))
+			{
+				alias = isQueryParameter
+					? $"--query-{preferredName}"
+					: $"--body-{preferredName}";
+
+				if (!usedAliases.Add(alias))
+				{
+					continue;
+				}
+			}
+
+			var option = new Option<string?>(alias)
+			{
+				Arity = ArgumentArity.ZeroOrOne,
+				Description = isQueryParameter
+					? $"Query parameter '{key}'."
+					: $"Request body field '{property.Name}'.",
+			};
+
+			bindings.Add(new ParameterOptionBinding(key, property, option));
+		}
+
+		return bindings;
+	}
+
+	private static string ToOptionName(string value)
+	{
+		var decoded = Uri.UnescapeDataString(value).Trim();
+		decoded = decoded.TrimStart('$', '@');
+		var cleaned = new string(decoded
+			.Select(c => char.IsLetterOrDigit(c) || c == '-' || c == '_' ? c : '-')
+			.ToArray())
+			.Trim('-');
+
+		if (string.IsNullOrWhiteSpace(cleaned))
+		{
+			return string.Empty;
+		}
+
+		cleaned = cleaned.Replace('_', '-');
+		return ToKebabCase(cleaned);
+	}
+
+	private static void ApplyNamedQueryOptionValues(
+		IDictionary<string, string> queryMap,
+		IReadOnlyList<ParameterOptionBinding> queryOptionBindings,
+		ParseResult parseResult)
+	{
+		foreach (var binding in queryOptionBindings)
+		{
+			var value = parseResult.GetValue(binding.Option);
+			if (value is null)
+			{
+				continue;
+			}
+
+			queryMap[binding.Key] = value;
 		}
 	}
 
@@ -408,8 +521,22 @@ public class Program
 		return bodyJson;
 	}
 
-	private static object? BuildBodyArgument(Type? bodyType, string? bodyJson)
+	private static object? BuildBodyArgument(
+		Type? bodyType,
+		string? bodyJson,
+		IReadOnlyList<ParameterOptionBinding> bodyOptionBindings,
+		ParseResult parseResult)
 	{
+		var hasBodyOptions = false;
+		foreach (var binding in bodyOptionBindings)
+		{
+			if (parseResult.GetValue(binding.Option) is not null)
+			{
+				hasBodyOptions = true;
+				break;
+			}
+		}
+
 		if (bodyType is null)
 		{
 			if (!string.IsNullOrWhiteSpace(bodyJson))
@@ -417,7 +544,37 @@ public class Program
 				throw new InvalidOperationException("This endpoint does not accept a request body.");
 			}
 
+			if (hasBodyOptions)
+			{
+				throw new InvalidOperationException("This endpoint does not accept request body fields.");
+			}
+
 			return null;
+		}
+
+		if (!string.IsNullOrWhiteSpace(bodyJson) && hasBodyOptions)
+		{
+			throw new InvalidOperationException("Use either --body-json/--body-file or body field options, not both.");
+		}
+
+		if (hasBodyOptions)
+		{
+			var bodyObject = Activator.CreateInstance(bodyType)
+				?? throw new InvalidOperationException($"Could not construct request body type {bodyType.FullName}.");
+
+			foreach (var binding in bodyOptionBindings)
+			{
+				var value = parseResult.GetValue(binding.Option);
+				if (value is null)
+				{
+					continue;
+				}
+
+				var converted = ConvertString(value, binding.Property.PropertyType);
+				binding.Property.SetValue(bodyObject, converted);
+			}
+
+			return bodyObject;
 		}
 
 		if (string.IsNullOrWhiteSpace(bodyJson))
