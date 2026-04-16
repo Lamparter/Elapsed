@@ -263,7 +263,7 @@ public class Program
 		{
 			foreach (var descriptor in GetOperationDescriptors().OrderBy(x => x.OperationPath))
 			{
-				Console.WriteLine($"{descriptor.OperationPath} [{descriptor.HttpMethod}]");
+				Console.WriteLine($"{descriptor.HttpOperationPath} [{descriptor.HttpMethod}]");
 			}
 
 			return 0;
@@ -278,7 +278,8 @@ public class Program
 
 		foreach (var group in grouped)
 		{
-			var groupCommand = new Command(group.Key) { Description = $"Operations under /{group.Key}" };
+			var httpGroupPath = ToCamelCaseFromKebab(group.Key);
+			var groupCommand = new Command(group.Key) { Description = $"Operations under /{httpGroupPath}" };
 			foreach (var operation in group.OrderBy(x => x.CommandName))
 			{
 				var opCommand = new Command(operation.CommandName) { Description = operation.Description };
@@ -830,6 +831,7 @@ public class Program
 		foreach (var group in topLevelGroups)
 		{
 			var groupName = ToKebabCase(NormalizeKeywordPropertyName(group.Name));
+			var httpGroupName = ToCamelCase(NormalizeKeywordPropertyName(group.Name));
 			var endpointProperties = group.PropertyType
 				.GetProperties(BindingFlags.Public | BindingFlags.Instance)
 				.Where(p => IsRequestBuilderType(p.PropertyType))
@@ -848,6 +850,7 @@ public class Program
 				var requestConfigType = FindRequestConfigurationType(operationMethod);
 				var queryType = FindQueryType(requestConfigType);
 				var operationName = ToKebabCase(NormalizeKeywordPropertyName(endpoint.Name));
+				var httpOperationName = ToCamelCase(NormalizeKeywordPropertyName(endpoint.Name));
 				var httpMethod = operationMethod.Name.StartsWith("Get", StringComparison.Ordinal) ? "GET"
 					: operationMethod.Name.StartsWith("Post", StringComparison.Ordinal) ? "POST"
 					: operationMethod.Name.StartsWith("Patch", StringComparison.Ordinal) ? "PATCH"
@@ -858,8 +861,9 @@ public class Program
 					GroupName: groupName,
 					CommandName: operationName,
 					OperationPath: $"{groupName}/{operationName}",
+					HttpOperationPath: $"{httpGroupName}/{httpOperationName}",
 					Description: GetOperationDescription($"{groupName}/{operationName}", httpMethod, operationMethod)
-						?? $"{httpMethod} {groupName}/{operationName}",
+						?? $"{httpMethod} {httpGroupName}/{httpOperationName}",
 					HttpMethod: httpMethod,
 					BuilderPath: [group, endpoint],
 					OperationMethod: operationMethod,
@@ -1090,6 +1094,55 @@ public class Program
 			else
 			{
 				sb.Append(c);
+			}
+		}
+
+		return sb.ToString();
+	}
+
+	private static string ToCamelCase(string value)
+	{
+		if (string.IsNullOrEmpty(value))
+		{
+			return value;
+		}
+
+		if (value.Length == 1)
+		{
+			return char.ToLowerInvariant(value[0]).ToString();
+		}
+
+		return char.ToLowerInvariant(value[0]) + value[1..];
+	}
+
+	private static string ToCamelCaseFromKebab(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			return value;
+		}
+
+		var parts = value.Split('-', StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length == 0)
+		{
+			return string.Empty;
+		}
+
+		var sb = new StringBuilder();
+		sb.Append(parts[0].ToLowerInvariant());
+
+		for (var i = 1; i < parts.Length; i++)
+		{
+			var part = parts[i].ToLowerInvariant();
+			if (part.Length == 0)
+			{
+				continue;
+			}
+
+			sb.Append(char.ToUpperInvariant(part[0]));
+			if (part.Length > 1)
+			{
+				sb.Append(part[1..]);
 			}
 		}
 
