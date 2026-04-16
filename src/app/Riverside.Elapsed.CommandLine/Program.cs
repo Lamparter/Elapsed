@@ -25,31 +25,31 @@ public class Program
 	private static readonly Option<string?> BaseUrlOption = new("--base-url")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Lapse API base URL.",
+		Description = "Lapse API base URL",
 	};
 
 	private static readonly Option<string?> TokenOption = new("--token")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Bearer token for authenticated endpoints.",
+		Description = "Bearer token for authenticated endpoints",
 	};
 
 	private static readonly Option<FileInfo?> TokenFileOption = new("--token-file")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Path to a file containing a bearer token.",
+		Description = "Path to a file containing a bearer token",
 	};
 
 	private static readonly Option<string?> BodyJsonOption = new("--body-json")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Inline JSON request body.",
+		Description = "Inline JSON request body",
 	};
 
 	private static readonly Option<FileInfo?> BodyFileOption = new("--body-file")
 	{
 		Arity = ArgumentArity.ZeroOrOne,
-		Description = "Path to JSON file containing request body.",
+		Description = "Path to JSON file containing request body",
 	};
 
 	private static readonly Option<string[]> QueryOption = new("--query")
@@ -80,12 +80,12 @@ public class Program
 
 	private static Command BuildConfigCommand()
 	{
-		var config = new Command("config") { Description = "Manage persisted CLI configuration." };
+		var config = new Command("config") { Description = "Manage persisted CLI configuration" };
 
-		var setToken = new Command("set-token") { Description = "Persist a bearer token for future runs." };
+		var setToken = new Command("set-token") { Description = "Persist a bearer token for future runs" };
 		var tokenArg = new Argument<string>("token")
 		{
-			Description = "Bearer token value.",
+			Description = "Bearer token value",
 		};
 		setToken.Add(tokenArg);
 		setToken.SetAction(parseResult =>
@@ -98,7 +98,7 @@ public class Program
 			return 0;
 		});
 
-		var clearToken = new Command("clear-token") { Description = "Clear persisted bearer token." };
+		var clearToken = new Command("clear-token") { Description = "Clear persisted bearer token" };
 		clearToken.SetAction(_ =>
 		{
 			var cfg = LoadConfig();
@@ -108,7 +108,7 @@ public class Program
 			return 0;
 		});
 
-		var show = new Command("show") { Description = "Show current CLI configuration." };
+		var show = new Command("show") { Description = "Show current CLI configuration" };
 		show.SetAction(_ =>
 		{
 			var cfg = LoadConfig();
@@ -123,7 +123,7 @@ public class Program
 			return 0;
 		});
 
-		var auth = new Command("auth") { Description = "Authenticate online to get a bearer token." };
+		var auth = new Command("auth") { Description = "Authenticate online to get a bearer token" };
 		auth.SetAction(async _ =>
 		{
 			return await HandleAuthAsync();
@@ -258,7 +258,7 @@ public class Program
 
 	private static Command BuildListOperationsCommand()
 	{
-		var list = new Command("list-operations") { Description = "List all generated API operations that are available." };
+		var list = new Command("list-operations") { Description = "List all generated API operations that are available" };
 		list.SetAction(_ =>
 		{
 			foreach (var descriptor in GetOperationDescriptors().OrderBy(x => x.OperationPath))
@@ -421,8 +421,8 @@ public class Program
 			{
 				Arity = ArgumentArity.ZeroOrOne,
 				Description = isQueryParameter
-					? $"Query parameter '{key}'."
-					: $"Request body field '{property.Name}'.",
+					? $"Query parameter '{key}'"
+					: $"Request body field '{property.Name}'",
 			};
 
 			bindings.Add(new ParameterOptionBinding(key, property, option));
