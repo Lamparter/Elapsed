@@ -11,14 +11,6 @@ namespace Riverside.MediaRecording.Windows;
 /// </summary>
 public sealed class WindowsCameraCapture : ICameraCapturable
 {
-	private const uint WmUser = 0x0400;
-	private const uint WmCapStart = WmUser;
-	private const uint WmCapDriverConnect = WmCapStart + 10;
-	private const uint WmCapDriverDisconnect = WmCapStart + 11;
-	private const uint WmCapFileSetCaptureFileW = WmCapStart + 20;
-	private const uint WmCapSequence = WmCapStart + 62;
-	private const uint WmCapStop = WmCapStart + 68;
-
 	private static readonly RecordableDeviceCapabilities _cameraCapabilities = new()
 	{
 		SupportsVideoCapture = true,
@@ -144,14 +136,14 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 		{
 			var connected = PInvoke.SendMessage(
 				window,
-				WmCapDriverConnect,
+				PInvoke.WM_CAP_DRIVER_CONNECT,
 				new WPARAM((nuint)index),
 				new LPARAM(nint.Zero));
 
 			if (connected.Value == 0)
 				return false;
 
-			PInvoke.SendMessage(window, WmCapDriverDisconnect, new WPARAM(0), new LPARAM(nint.Zero));
+			PInvoke.SendMessage(window, PInvoke.WM_CAP_DRIVER_DISCONNECT, new WPARAM(0), new LPARAM(nint.Zero));
 			return true;
 		}
 		finally
@@ -345,7 +337,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 			var connected = PInvoke.SendMessage(
 				window,
-				WmCapDriverConnect,
+				PInvoke.WM_CAP_DRIVER_CONNECT,
 				new WPARAM((nuint)cameraIndex),
 				new LPARAM(nint.Zero));
 
@@ -365,7 +357,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			{
 				var configured = PInvoke.SendMessage(
 					captureWindow,
-					WmCapFileSetCaptureFileW,
+					PInvoke.WM_CAP_FILE_SET_CAPTURE_FILE,
 					new WPARAM(0),
 					new LPARAM(pathPointer));
 
@@ -380,7 +372,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 		private static void StartSequence(HWND captureWindow)
 		{
-			var started = PInvoke.SendMessage(captureWindow, WmCapSequence, new WPARAM(0), new LPARAM(nint.Zero));
+			var started = PInvoke.SendMessage(captureWindow, PInvoke.WM_CAP_SEQUENCE, new WPARAM(0), new LPARAM(nint.Zero));
 			if (started.Value == 0)
 				throw new InvalidOperationException("Unable to start camera capture sequence.");
 		}
@@ -390,7 +382,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			if (captureWindow.IsNull)
 				return;
 
-			PInvoke.SendMessage(captureWindow, WmCapStop, new WPARAM(0), new LPARAM(nint.Zero));
+			PInvoke.SendMessage(captureWindow, PInvoke.WM_CAP_STOP, new WPARAM(0), new LPARAM(nint.Zero));
 		}
 
 		private static void ReleaseCaptureWindow(HWND captureWindow)
@@ -398,7 +390,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			if (captureWindow.IsNull)
 				return;
 
-			PInvoke.SendMessage(captureWindow, WmCapDriverDisconnect, new WPARAM(0), new LPARAM(nint.Zero));
+			PInvoke.SendMessage(captureWindow, PInvoke.WM_CAP_DRIVER_DISCONNECT, new WPARAM(0), new LPARAM(nint.Zero));
 			PInvoke.DestroyWindow(captureWindow);
 		}
 	}
