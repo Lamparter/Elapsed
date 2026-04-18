@@ -1,13 +1,8 @@
-extern alias gdi32;
-extern alias user32;
-
 using System.IO.Compression;
 using OwlCore.Storage;
-using GraphicsPInvoke = gdi32::Windows.Win32.PInvoke;
-using UserPInvoke = user32::Windows.Win32.PInvoke;
-using gdi32::Windows.Win32.Foundation;
-using gdi32::Windows.Win32.Graphics.Gdi;
-using user32::Windows.Win32.Foundation;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 
 namespace Riverside.MediaRecording.Windows;
 
@@ -319,42 +314,40 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 		{
 			var region = requestedRegion ?? GetDesktopRegion();
 
-			var desktop = UserPInvoke.GetDesktopWindow();
+			var desktop = PInvoke.GetDesktopWindow();
 			if (desktop.IsNull)
 				throw new InvalidOperationException("Unable to resolve the desktop window.");
 
-		  var sourceDc = UserPInvoke.GetDC(desktop);
+			var sourceDc = PInvoke.GetDC(desktop);
 			if (sourceDc.IsNull)
 				throw new InvalidOperationException("Unable to acquire the desktop device context.");
 
-			var sourceGraphicsDc = new gdi32::Windows.Win32.Graphics.Gdi.HDC(sourceDc.Value);
-
-			var memoryDc = GraphicsPInvoke.CreateCompatibleDC(sourceGraphicsDc);
+			var memoryDc = PInvoke.CreateCompatibleDC(sourceDc);
 			if (memoryDc.IsNull)
 			{
-				UserPInvoke.ReleaseDC(desktop, sourceDc);
+				PInvoke.ReleaseDC(desktop, sourceDc);
 				throw new InvalidOperationException("Unable to create a compatible memory device context.");
 			}
 
-		 var bitmap = GraphicsPInvoke.CreateCompatibleBitmap(sourceGraphicsDc, region.Width, region.Height);
+			var bitmap = PInvoke.CreateCompatibleBitmap(sourceDc, region.Width, region.Height);
 			if (bitmap.IsNull)
 			{
-				GraphicsPInvoke.DeleteDC(memoryDc);
-				UserPInvoke.ReleaseDC(desktop, sourceDc);
+				PInvoke.DeleteDC(memoryDc);
+				PInvoke.ReleaseDC(desktop, sourceDc);
 				throw new InvalidOperationException("Unable to create a compatible bitmap.");
 			}
 
-			var oldObject = GraphicsPInvoke.SelectObject(memoryDc, (HGDIOBJ)bitmap);
+			var oldObject = PInvoke.SelectObject(memoryDc, (HGDIOBJ)bitmap);
 			try
 			{
 				var rop = (ROP_CODE)0x40CC0020u;
-				var bitBlt = GraphicsPInvoke.BitBlt(
+				var bitBlt = PInvoke.BitBlt(
 					memoryDc,
 					0,
 					0,
 					region.Width,
 					region.Height,
-				   sourceGraphicsDc,
+					sourceDc,
 					region.Left,
 					region.Top,
 					rop);
@@ -369,11 +362,11 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 				info.bmiHeader.biHeight = -region.Height;
 				info.bmiHeader.biPlanes = 1;
 				info.bmiHeader.biBitCount = 32;
-			   info.bmiHeader.biCompression = 0;
+				info.bmiHeader.biCompression = 0;
 
 				fixed (byte* pixelPtr = pixels)
 				{
-					var lineCount = GraphicsPInvoke.GetDIBits(
+					var lineCount = PInvoke.GetDIBits(
 						memoryDc,
 						bitmap,
 						0,
@@ -390,20 +383,20 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			}
 			finally
 			{
-				GraphicsPInvoke.SelectObject(memoryDc, oldObject);
-				GraphicsPInvoke.DeleteObject((HGDIOBJ)bitmap);
-				GraphicsPInvoke.DeleteDC(memoryDc);
-				UserPInvoke.ReleaseDC(desktop, sourceDc);
+				PInvoke.SelectObject(memoryDc, oldObject);
+				PInvoke.DeleteObject((HGDIOBJ)bitmap);
+				PInvoke.DeleteDC(memoryDc);
+				PInvoke.ReleaseDC(desktop, sourceDc);
 			}
 		}
 
 		private static CaptureRegion GetDesktopRegion()
 		{
-			var desktop = UserPInvoke.GetDesktopWindow();
+			var desktop = PInvoke.GetDesktopWindow();
 			if (desktop.IsNull)
 				throw new InvalidOperationException("Unable to resolve the desktop window.");
 
-			if (!UserPInvoke.GetWindowRect(desktop, out var rect))
+			if (!PInvoke.GetWindowRect(desktop, out var rect))
 				throw new InvalidOperationException("Unable to query the desktop bounds.");
 
 			return new CaptureRegion(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);

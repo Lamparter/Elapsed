@@ -1,10 +1,8 @@
-extern alias user32;
-
 using System.Runtime.InteropServices;
 using OwlCore.Storage;
-using UserPInvoke = user32::Windows.Win32.PInvoke;
-using user32::Windows.Win32.Foundation;
-using user32::Windows.Win32.UI.WindowsAndMessaging;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Riverside.MediaRecording.Windows;
 
@@ -125,7 +123,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 	private static unsafe bool ProbeCamera(int index)
 	{
-		var window = UserPInvoke.CreateWindowEx(
+		var window = PInvoke.CreateWindowEx(
 			(WINDOW_EX_STYLE)0,
 			"avicap32",
 			$"Camera probe {index}",
@@ -144,7 +142,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 		try
 		{
-			var connected = UserPInvoke.SendMessage(
+			var connected = PInvoke.SendMessage(
 				window,
 				WmCapDriverConnect,
 				new WPARAM((nuint)index),
@@ -153,12 +151,12 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			if (connected.Value == 0)
 				return false;
 
-			UserPInvoke.SendMessage(window, WmCapDriverDisconnect, new WPARAM(0), new LPARAM(nint.Zero));
+			PInvoke.SendMessage(window, WmCapDriverDisconnect, new WPARAM(0), new LPARAM(nint.Zero));
 			return true;
 		}
 		finally
 		{
-			UserPInvoke.DestroyWindow(window);
+			PInvoke.DestroyWindow(window);
 		}
 	}
 
@@ -328,7 +326,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 		private static unsafe HWND CreateCaptureWindow(int cameraIndex)
 		{
-			var window = UserPInvoke.CreateWindowEx(
+			var window = PInvoke.CreateWindowEx(
 				(WINDOW_EX_STYLE)0,
 				"avicap32",
 				$"Camera capture {cameraIndex}",
@@ -345,7 +343,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			if (window.IsNull)
 				throw new InvalidOperationException("Unable to create the camera capture window.");
 
-			var connected = UserPInvoke.SendMessage(
+			var connected = PInvoke.SendMessage(
 				window,
 				WmCapDriverConnect,
 				new WPARAM((nuint)cameraIndex),
@@ -353,7 +351,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 			if (connected.Value == 0)
 			{
-				UserPInvoke.DestroyWindow(window);
+				PInvoke.DestroyWindow(window);
 				throw new InvalidOperationException("Unable to connect to the selected camera source.");
 			}
 
@@ -365,7 +363,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			var pathPointer = Marshal.StringToHGlobalUni(filePath);
 			try
 			{
-				var configured = UserPInvoke.SendMessage(
+				var configured = PInvoke.SendMessage(
 					captureWindow,
 					WmCapFileSetCaptureFileW,
 					new WPARAM(0),
@@ -382,7 +380,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 		private static void StartSequence(HWND captureWindow)
 		{
-			var started = UserPInvoke.SendMessage(captureWindow, WmCapSequence, new WPARAM(0), new LPARAM(nint.Zero));
+			var started = PInvoke.SendMessage(captureWindow, WmCapSequence, new WPARAM(0), new LPARAM(nint.Zero));
 			if (started.Value == 0)
 				throw new InvalidOperationException("Unable to start camera capture sequence.");
 		}
@@ -392,7 +390,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			if (captureWindow.IsNull)
 				return;
 
-			UserPInvoke.SendMessage(captureWindow, WmCapStop, new WPARAM(0), new LPARAM(nint.Zero));
+			PInvoke.SendMessage(captureWindow, WmCapStop, new WPARAM(0), new LPARAM(nint.Zero));
 		}
 
 		private static void ReleaseCaptureWindow(HWND captureWindow)
@@ -400,8 +398,8 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			if (captureWindow.IsNull)
 				return;
 
-			UserPInvoke.SendMessage(captureWindow, WmCapDriverDisconnect, new WPARAM(0), new LPARAM(nint.Zero));
-			UserPInvoke.DestroyWindow(captureWindow);
+			PInvoke.SendMessage(captureWindow, WmCapDriverDisconnect, new WPARAM(0), new LPARAM(nint.Zero));
+			PInvoke.DestroyWindow(captureWindow);
 		}
 	}
 }

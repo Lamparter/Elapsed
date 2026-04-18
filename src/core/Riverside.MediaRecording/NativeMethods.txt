@@ -1,0 +1,14 @@
+GetDesktopWindow
+GetDC
+ReleaseDC
+GetWindowRect
+CreateCompatibleDC
+CreateCompatibleBitmap
+SelectObject
+BitBlt
+GetDIBits
+DeleteObject
+DeleteDC
+CreateWindowEx
+SendMessage
+DestroyWindow
