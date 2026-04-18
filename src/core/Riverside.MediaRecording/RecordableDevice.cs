@@ -1,13 +1,19 @@
 namespace Riverside.MediaRecording;
 
-public enum RecordableDevice
+public struct RecordableDevice
 {
-	Unknown,
-	Display,
-	Window,
-	Region,
-	Camera,
-	Microphone,
-	Speaker,
-	Virtual,
+	/// <summary>
+	/// The unique device identifier.
+	/// </summary>
+	public Guid Id { get; }
+
+	/// <summary>
+	/// A user-friendly device name for UI display, e.g. "Back camera".
+	/// </summary>
+	public string Name { get; }
+
+	/// <summary>
+	/// The device category.
+	/// </summary>
+	public DeviceType DeviceType { get; }
 }

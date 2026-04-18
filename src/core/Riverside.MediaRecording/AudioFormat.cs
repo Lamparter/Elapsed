@@ -1,5 +1,6 @@
 namespace Riverside.MediaRecording;
 
+[Obsolete]
 public sealed class AudioFormat
 {
 	public bool IncludeMicrophone { get; set; }

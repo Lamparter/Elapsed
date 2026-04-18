@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Riverside.MediaRecording;
 
-internal interface IRecordable
+/// <summary>
+/// Represents a generic recording source.
+/// It could be an audio stream, screenshot service, or screen recording.
+/// </summary>
+public interface IRecordable
 {
+	IReadOnlyList<RecordableDevice> Sources { get; }
 }
