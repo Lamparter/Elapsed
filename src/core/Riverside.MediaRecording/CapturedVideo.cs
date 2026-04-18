@@ -1,14 +1,22 @@
 namespace Riverside.MediaRecording;
 
-public struct CapturedVideo
+/// <summary>
+/// Represents the result of a completed video recording session.
+/// </summary>
+public sealed record CapturedVideo : CapturedMedia
 {
-	public string FilePath { get; set; }
+	/// <summary>
+	/// Gets the effective video format used by the recording.
+	/// </summary>
+	public CaptureFormat? Format { get; init; }
 
-	public MemoryStream? VideoStream { get; set; }
+	/// <summary>
+	/// Gets the captured region when region capture was requested.
+	/// </summary>
+	public CaptureRegion? Region { get; init; }
 
-	public CaptureFormat Format { get; set; }
-
-	public DateTimeOffset StartedAt { get; set; }
-
-	public DateTimeOffset EndedAt { get; set; }
+	/// <summary>
+	/// Gets the effective optional audio configuration used by the recording.
+	/// </summary>
+	public AudioCaptureOptions? Audio { get; init; }
 }

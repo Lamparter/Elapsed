@@ -1,20 +1,22 @@
 namespace Riverside.MediaRecording;
 
-public interface IVideoCaptureSession
+/// <summary>
+/// Represents a video recording session.
+/// </summary>
+public interface IVideoCaptureSession : IRecordingSession<CapturedVideo>
 {
-	Guid Id { get; }
+	/// <summary>
+	/// Gets the preferred video format for this session.
+	/// </summary>
+	CaptureFormat? Format { get; }
 
-	RecordingStatus Status { get; }
+	/// <summary>
+	/// Gets the preferred region for this session.
+	/// </summary>
+	CaptureRegion? Region { get; }
 
-	TimeSpan Duration { get; }
-
-	event EventHandler<> PreviewFrameAvailable;
-
-	Task StartAsync(CancellationToken cancellationToken = default);
-
-	Task PauseAsync();
-
-	Task ResumeAsync();
-
-	Task<> StopAsync();
+	/// <summary>
+	/// Gets the optional audio configuration for this session.
+	/// </summary>
+	AudioCaptureOptions? Audio { get; }
 }

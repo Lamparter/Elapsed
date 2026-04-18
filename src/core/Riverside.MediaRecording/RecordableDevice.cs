@@ -1,19 +1,14 @@
 namespace Riverside.MediaRecording;
 
-public struct RecordableDevice
-{
-	/// <summary>
-	/// The unique device identifier.
-	/// </summary>
-	public Guid Id { get; }
-
-	/// <summary>
-	/// A user-friendly device name for UI display, e.g. "Back camera".
-	/// </summary>
-	public string Name { get; }
-
-	/// <summary>
-	/// The device category.
-	/// </summary>
-	public DeviceType DeviceType { get; }
-}
+/// <summary>
+/// Represents a single recordable source with identity and capability metadata.
+/// </summary>
+/// <param name="Id">The unique source identifier.</param>
+/// <param name="Name">A user-friendly source name for display.</param>
+/// <param name="DeviceType">The source category.</param>
+/// <param name="Capabilities">The source capabilities and supported formats.</param>
+public readonly record struct RecordableDevice(
+	Guid Id,
+	string Name,
+	DeviceType DeviceType,
+	RecordableDeviceCapabilities Capabilities);

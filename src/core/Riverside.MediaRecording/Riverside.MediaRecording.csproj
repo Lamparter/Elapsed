@@ -6,6 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="OwlCore.Storage" Version="0.15.0" />
 		<PackageReference Include="Riverside.Win32.Graphics" Version="1.2.260408" />
 		<PackageReference Include="Riverside.Win32.UserInterface" Version="1.2.260408" />
 	</ItemGroup>
