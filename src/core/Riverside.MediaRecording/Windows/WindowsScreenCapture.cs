@@ -241,6 +241,11 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			{
 				FinalizeArchive();
 
+				_archive?.Dispose();
+				_archive = null;
+				_temporaryArchiveStream?.Dispose();
+				_temporaryArchiveStream = null;
+
 				await using var destination = await _outputFile.OpenWriteAsync().ConfigureAwait(false);
 				await using var sourceStream = File.OpenRead(_temporaryArchivePath);
 				await sourceStream.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
