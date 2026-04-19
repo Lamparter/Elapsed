@@ -16,7 +16,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 		SupportsVideoCapture = true,
 		SupportsAudioCapture = false,
 		SupportsRegionCapture = true,
-		SupportsSourceSwitching = true,
+		SupportsSourceSwitching = false,
 	};
 
 	private readonly List<RecordableDevice> _sources = [];
@@ -54,6 +54,9 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 		CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
+
+		if (outputFile is null)
+			throw new ArgumentNullException(nameof(outputFile), "An output file is required to persist the captured video.");
 
 		if (source.DeviceType is not DeviceType.Display and not DeviceType.Window and not DeviceType.Region)
 			throw new ArgumentException("The source must be a screen-based source.", nameof(source));
@@ -98,11 +101,14 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 	private sealed class WindowsScreenCaptureSession : IVideoCaptureSession
 	{
 		private readonly object _gate = new();
-		private readonly List<ScreenFrame> _frames = [];
-		private readonly IFile? _outputFile;
+		private readonly IFile _outputFile;
+		private readonly string _temporaryArchivePath;
 
 		private CancellationTokenSource? _captureCts;
 		private Task? _captureTask;
+		private FileStream? _temporaryArchiveStream;
+		private ZipArchive? _archive;
+		private int _frameCount;
 		private DateTimeOffset _startedAt;
 		private DateTimeOffset _endedAt;
 
@@ -111,7 +117,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			CaptureFormat? format,
 			CaptureRegion? region,
 			AudioCaptureOptions? audio,
-			IFile? outputFile)
+			IFile outputFile)
 		{
 			Id = Guid.NewGuid();
 			Source = source;
@@ -119,6 +125,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			Region = region;
 			Audio = audio;
 			_outputFile = outputFile;
+			_temporaryArchivePath = Path.GetTempFileName();
 			Status = RecordingStatus.NotStarted;
 		}
 
@@ -142,7 +149,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 
 		public IFile? OutputFile => _outputFile;
 
-		public bool CanSwitchSource => true;
+		public bool CanSwitchSource => false;
 
 		public CaptureFormat? Format { get; }
 
@@ -158,6 +165,9 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 					throw new InvalidOperationException("The session has already been started.");
 
 				Status = RecordingStatus.Starting;
+				_temporaryArchiveStream = new FileStream(_temporaryArchivePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+				_archive = new ZipArchive(_temporaryArchiveStream, ZipArchiveMode.Create, leaveOpen: true);
+				_frameCount = 0;
 				_startedAt = DateTimeOffset.UtcNow;
 				_captureCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 				_captureTask = CaptureLoopAsync(_captureCts.Token);
@@ -202,12 +212,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 		public Task SwitchSourceAsync(RecordableDevice source, CancellationToken cancellationToken = default)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-
-			if (source.DeviceType is not DeviceType.Display and not DeviceType.Window and not DeviceType.Region)
-				throw new ArgumentException("The source must be a screen-based source.", nameof(source));
-
-			Source = source;
-			return Task.CompletedTask;
+			throw new NotSupportedException("Source switching is not supported by this screen capture implementation.");
 		}
 
 		public async Task<CapturedVideo> StopAsync(CancellationToken cancellationToken = default)
@@ -232,11 +237,24 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 
 			_endedAt = DateTimeOffset.UtcNow;
 
-			if (_outputFile is not null)
+			try
 			{
+				FinalizeArchive();
+
 				await using var destination = await _outputFile.OpenWriteAsync().ConfigureAwait(false);
-				await WriteArchiveAsync(destination, cancellationToken).ConfigureAwait(false);
+				await using var sourceStream = File.OpenRead(_temporaryArchivePath);
+				await sourceStream.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
 				await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				_archive?.Dispose();
+				_archive = null;
+				_temporaryArchiveStream?.Dispose();
+				_temporaryArchiveStream = null;
+
+				if (File.Exists(_temporaryArchivePath))
+					File.Delete(_temporaryArchivePath);
 			}
 
 			Status = RecordingStatus.Stopped;
@@ -267,7 +285,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 					var frame = CaptureScreenFrame(Region);
 					lock (_gate)
 					{
-						_frames.Add(frame);
+						AppendFrameToArchive(frame);
 					}
 				}
 
@@ -282,37 +300,34 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			}
 		}
 
-		private async Task WriteArchiveAsync(Stream stream, CancellationToken cancellationToken)
+		private void AppendFrameToArchive(byte[] frameBytes)
 		{
-			using var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true);
+			if (_archive is null)
+				throw new InvalidOperationException("The capture archive is not initialised.");
 
-			var index = 0;
-			List<ScreenFrame> frames;
-			lock (_gate)
-			{
-				frames = [.. _frames];
-			}
-
-			foreach (var frame in frames)
-			{
-				var entry = archive.CreateEntry($"frame-{index:D6}.bmp", CompressionLevel.Fastest);
-				await using var entryStream = entry.Open();
-				await entryStream.WriteAsync(frame.BmpBytes, cancellationToken).ConfigureAwait(false);
-				index++;
-			}
-
-			var manifest = archive.CreateEntry("manifest.txt", CompressionLevel.Fastest);
-			await using var manifestStream = manifest.Open();
-			await using var writer = new StreamWriter(manifestStream);
-			await writer.WriteLineAsync($"startedAt={_startedAt:O}").ConfigureAwait(false);
-			await writer.WriteLineAsync($"endedAt={_endedAt:O}").ConfigureAwait(false);
-			await writer.WriteLineAsync($"frameCount={frames.Count}").ConfigureAwait(false);
-			await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+			var entry = _archive.CreateEntry($"frame-{_frameCount:D6}.bmp", CompressionLevel.Fastest);
+			using var entryStream = entry.Open();
+			entryStream.Write(frameBytes, 0, frameBytes.Length);
+			_frameCount++;
 		}
 
-		private static unsafe ScreenFrame CaptureScreenFrame(CaptureRegion? requestedRegion)
+		private void FinalizeArchive()
 		{
-			var region = requestedRegion ?? GetDesktopRegion();
+			if (_archive is null)
+				throw new InvalidOperationException("The capture archive is not initialised.");
+
+			var manifest = _archive.CreateEntry("manifest.txt", CompressionLevel.Fastest);
+			using var manifestStream = manifest.Open();
+			using var writer = new StreamWriter(manifestStream);
+			writer.WriteLine($"startedAt={_startedAt:O}");
+			writer.WriteLine($"endedAt={_endedAt:O}");
+			writer.WriteLine($"frameCount={_frameCount}");
+			writer.Flush();
+		}
+
+		private static unsafe byte[] CaptureScreenFrame(CaptureRegion? requestedRegion)
+		{
+			var region = ResolveCaptureRegion(requestedRegion);
 
 			var desktop = PInvoke.GetDesktopWindow();
 			if (desktop.IsNull)
@@ -379,7 +394,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 						throw new InvalidOperationException("GetDIBits failed while reading captured frame data.");
 				}
 
-				return new ScreenFrame(DateTimeOffset.UtcNow, CreateBitmapFileBytes(region.Width, region.Height, pixels));
+				return CreateBitmapFileBytes(region.Width, region.Height, pixels);
 			}
 			finally
 			{
@@ -388,6 +403,30 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 				PInvoke.DeleteDC(memoryDc);
 				PInvoke.ReleaseDC(desktop, sourceDc);
 			}
+		}
+
+		private static CaptureRegion ResolveCaptureRegion(CaptureRegion? requestedRegion)
+		{
+			var desktopRegion = GetDesktopRegion();
+
+			if (requestedRegion is null)
+				return desktopRegion;
+
+			var region = requestedRegion.Value;
+			if (region.Width <= 0 || region.Height <= 0)
+				throw new ArgumentOutOfRangeException(nameof(requestedRegion), "The capture region width and height must be greater than zero.");
+
+			var left = Math.Max(region.Left, desktopRegion.Left);
+			var top = Math.Max(region.Top, desktopRegion.Top);
+			var right = Math.Min(region.Left + region.Width, desktopRegion.Left + desktopRegion.Width);
+			var bottom = Math.Min(region.Top + region.Height, desktopRegion.Top + desktopRegion.Height);
+
+			var width = right - left;
+			var height = bottom - top;
+			if (width <= 0 || height <= 0)
+				throw new ArgumentOutOfRangeException(nameof(requestedRegion), "The capture region does not intersect with the desktop bounds.");
+
+			return new CaptureRegion(left, top, width, height);
 		}
 
 		private static CaptureRegion GetDesktopRegion()
@@ -436,6 +475,5 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			return stream.ToArray();
 		}
 
-		private readonly record struct ScreenFrame(DateTimeOffset Timestamp, byte[] BmpBytes);
 	}
 }

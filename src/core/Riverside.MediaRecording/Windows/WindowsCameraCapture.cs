@@ -16,7 +16,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 		SupportsVideoCapture = true,
 		SupportsAudioCapture = true,
 		SupportsRegionCapture = false,
-		SupportsSourceSwitching = true,
+		SupportsSourceSwitching = false,
 	};
 
 	private readonly List<RecordableDevice> _sources = [];
@@ -55,6 +55,9 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 		CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
+
+		if (outputFile is null)
+			throw new ArgumentNullException(nameof(outputFile), "An output file is required to persist the captured video.");
 
 		if (source.DeviceType != DeviceType.Camera)
 			throw new ArgumentException("The source must be a camera source.", nameof(source));
@@ -156,7 +159,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 	{
 		private readonly object _gate = new();
 		private readonly int _cameraIndex;
-		private readonly IFile? _outputFile;
+		private readonly IFile _outputFile;
 		private readonly string _temporaryCapturePath;
 
 		private HWND _captureWindow;
@@ -168,7 +171,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			int cameraIndex,
 			CaptureFormat? format,
 			AudioCaptureOptions? audio,
-			IFile? outputFile)
+			IFile outputFile)
 		{
 			Id = Guid.NewGuid();
 			Source = source;
@@ -176,7 +179,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			Audio = audio;
 			_outputFile = outputFile;
 			_cameraIndex = cameraIndex;
-			_temporaryCapturePath = Path.ChangeExtension(Path.GetTempFileName(), ".avi");
+			_temporaryCapturePath = Path.GetTempFileName();
 			Status = RecordingStatus.NotStarted;
 		}
 
@@ -200,7 +203,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 
 		public IFile? OutputFile => _outputFile;
 
-		public bool CanSwitchSource => true;
+		public bool CanSwitchSource => false;
 
 		public CaptureFormat? Format { get; }
 
@@ -265,12 +268,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 		public Task SwitchSourceAsync(RecordableDevice source, CancellationToken cancellationToken = default)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-
-			if (source.DeviceType != DeviceType.Camera)
-				throw new ArgumentException("The source must be a camera source.", nameof(source));
-
-			Source = source;
-			return Task.CompletedTask;
+			throw new NotSupportedException("Source switching is not supported by this camera capture implementation.");
 		}
 
 		public async Task<CapturedVideo> StopAsync(CancellationToken cancellationToken = default)
@@ -292,16 +290,18 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 				_endedAt = DateTimeOffset.UtcNow;
 			}
 
-			if (_outputFile is not null)
+			try
 			{
 				await using var destination = await _outputFile.OpenWriteAsync().ConfigureAwait(false);
 				await using var sourceStream = File.OpenRead(_temporaryCapturePath);
 				await sourceStream.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
 				await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
 			}
-
-			if (File.Exists(_temporaryCapturePath))
-				File.Delete(_temporaryCapturePath);
+			finally
+			{
+				if (File.Exists(_temporaryCapturePath))
+					File.Delete(_temporaryCapturePath);
+			}
 
 			Status = RecordingStatus.Stopped;
 
