@@ -355,7 +355,7 @@ public sealed class WindowsScreenCapture : IScreenCapturable
 			var oldObject = PInvoke.SelectObject(memoryDc, (HGDIOBJ)bitmap);
 			try
 			{
-				var rop = (ROP_CODE)0x40CC0020u;
+				var rop = ROP_CODE.SRCCOPY | ROP_CODE.CAPTUREBLT;
 				var bitBlt = PInvoke.BitBlt(
 					memoryDc,
 					0,
