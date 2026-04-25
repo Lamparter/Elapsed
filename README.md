@@ -156,7 +156,7 @@ The Kiota generator emits clean C# code based on the [Lapse API documentation](h
 Using the client in the Lapse API is incredibly simple - you must pass a request adapter instance (`IRequestAdapter`) into the API client class constructor (`Riverside.Elapsed.ApiClient`).
 The API client class is an abstraction over HTTP requests that is specific to the Lapse API.
 
-If you are unsure how to consume the API client class, the [Elapsed CLI project](https://github.com/Lamparter/Elapsed/tree/main/src/app/Riverside.Elapsed.CommandLine) is an excellent example implementation.
+If you are unsure how to consume the API client class, the [Elapsed CLI project](https://github.com/Lamparter/Elapsed/tree/main/src/platforms/Riverside.Elapsed.CommandLine) is an excellent example implementation.
 It is recommended to have a good understanding of [how Microsoft Kiota works](https://learn.microsoft.com/en-us/openapi/kiota/design) before using the Elapsed API projection.
 
 ### Supported platforms

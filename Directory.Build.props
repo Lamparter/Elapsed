@@ -10,7 +10,7 @@
 		<BuildDirectory Condition=" '$(BuildDirectory)' == '' ">$(RootDirectory)eng</BuildDirectory>
 		<RepositoryFilesDirectory Condition=" '$(RepositoryFilesDirectory)' == '' ">$(RootDirectory).github</RepositoryFilesDirectory>
 
-		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\app</AppDirectory>
+		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\platforms</AppDirectory>
 		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
 
 		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>

@@ -9,11 +9,11 @@
 		<File Path="eng/PackageMetadata.props" />
 	</Folder>
 	<Folder Name="/src/" />
-	<Folder Name="/src/app/">
-		<Project Path="src/app/Riverside.Elapsed.App/Riverside.Elapsed.App.csproj">
+	<Folder Name="/src/platforms/">
+		<Project Path="src/platforms/Riverside.Elapsed.App/Riverside.Elapsed.App.csproj">
 			<Deploy />
 		</Project>
-		<Project Path="src/app/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj" />
+		<Project Path="src/platforms/Riverside.Elapsed.CommandLine/Riverside.Elapsed.CommandLine.csproj" />
 	</Folder>
 	<Folder Name="/src/core/">
 		<Project Path="src/core/Riverside.MediaRecording/Riverside.MediaRecording.csproj" />

@@ -11,8 +11,8 @@ env:
   WORKING_DIR: ${{ github.workspace }}
   GLOBAL_JSON_PATH: '${{ github.workspace }}\global.json'
   SOLUTION_PATH: '${{ github.workspace }}\Elapsed.slnx'
-  APP_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.App\Riverside.Elapsed.App.csproj'
-  CLI_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.CommandLine\Riverside.Elapsed.CommandLine.csproj'
+  APP_PROJECT_PATH: '${{ github.workspace }}\src\platforms\Riverside.Elapsed.App\Riverside.Elapsed.App.csproj'
+  CLI_PROJECT_PATH: '${{ github.workspace }}\src\platforms\Riverside.Elapsed.CommandLine\Riverside.Elapsed.CommandLine.csproj'
   API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed\Riverside.Elapsed.csproj'
   TUS_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.ResumableUploads\Riverside.ResumableUploads.csproj'
 
