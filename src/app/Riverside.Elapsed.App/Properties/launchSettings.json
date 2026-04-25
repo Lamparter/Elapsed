@@ -27,16 +27,14 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-	/*
-    "Windows App SDK (Unpackaged)": {
+    /* "Windows App SDK (Unpackaged)": {
       "commandName": "Project",
       "compatibleTargetFramework": "windows"
-    },
+    }, */
     "Windows App SDK (Packaged)": {
       "commandName": "MsixPackage",
       "compatibleTargetFramework": "windows"
     },
-	*/
     "Desktop": {
       "commandName": "Project",
       "compatibleTargetFramework": "desktop"
