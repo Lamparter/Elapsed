@@ -116,21 +116,17 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 		_deviceIndexes[fallbackId] = 0;
 	}
 
-	private static unsafe bool ProbeCamera(int index)
+	private static bool ProbeCamera(int index)
 	{
-		var window = PInvoke.CreateWindowEx(
-			(WINDOW_EX_STYLE)0,
-			"avicap32",
+		var window = PInvoke.capCreateCaptureWindow(
 			$"Camera probe {index}",
-			WINDOW_STYLE.WS_POPUP,
+			(uint)WINDOW_STYLE.WS_POPUP,
 			0,
 			0,
 			160,
 			120,
 			HWND.Null,
-			null,
-			null,
-			null);
+			0);
 
 		if (window.IsNull)
 			return false;
@@ -179,7 +175,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			Audio = audio;
 			_outputFile = outputFile;
 			_cameraIndex = cameraIndex;
-			_temporaryCapturePath = Path.GetTempFileName();
+			_temporaryCapturePath = Path.Combine(Path.GetTempPath(), $"riverside-camera-{Guid.NewGuid():N}.avi");
 			Status = RecordingStatus.NotStarted;
 		}
 
@@ -316,24 +312,20 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			};
 		}
 
-		private static unsafe HWND CreateCaptureWindow(int cameraIndex)
+		private static HWND CreateCaptureWindow(int cameraIndex)
 		{
-			var window = PInvoke.CreateWindowEx(
-				(WINDOW_EX_STYLE)0,
-				"avicap32",
+			var window = PInvoke.capCreateCaptureWindow(
 				$"Camera capture {cameraIndex}",
-				WINDOW_STYLE.WS_POPUP,
+				(uint)WINDOW_STYLE.WS_POPUP,
 				0,
 				0,
 				640,
 				480,
 				HWND.Null,
-				null,
-				null,
-				null);
+				0);
 
 			if (window.IsNull)
-				throw new InvalidOperationException("Unable to create the camera capture window.");
+				throw new InvalidOperationException($"Unable to create the camera capture window. Win32 error: {Marshal.GetLastWin32Error()}.");
 
 			var connected = PInvoke.SendMessage(
 				window,
