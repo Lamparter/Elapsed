@@ -5,10 +5,10 @@
 > 	<img src=".github/assets/Source_Hackclub.svg" alt="Find it on Hack Club" height="48" />
 > </a>
 >
-> Elapsed is currently in active development for Hackclub's [Campfire Flagship](https://flagship.hackclub.com) and [Hackclub: The Game](https://game.hackclub.com) programmes.
+> Elapsed is currently in active development for Hack Club's [Campfire Flagship](https://flagship.hackclub.com) and [Hack Club: The Game](https://game.hackclub.com) programmes.
 > *(this is not double dipping!)*
 >
-> If you are a Hackclub member and are interested in contributing, please reach out via the [`#elapsed`](https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU) channel on the Hackclub Slack!
+> If you are a Hack Club member and are interested in contributing, please reach out via the [`#elapsed`](https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU) channel on the Hack Club Slack!
 
 <!--
 <p align="left">
@@ -18,11 +18,11 @@
 
 <h1>Elapsed</h1>
 
-<h4>"Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hackclub's timelapse tracking tool.</h4>
+<h4>"Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hack Club's timelapse tracking tool.</h4>
 
 ---
 
-Introducing **Elapsed**, a **high-performance**, **cross-platform**, **native app** for Hackclub's timelapse programme, [Lapse](https://lapse.hackclub.com), complete with a **modern UI** that is built from the ground up.
+Introducing **Elapsed**, a **high-performance**, **cross-platform**, **native app** for Hack Club's timelapse programme, [Lapse](https://lapse.hackclub.com), complete with a **modern UI** that is built from the ground up.
 It is designed to feel **just like any other native app** on every platform it supports.
 Built with .NET and Uno Platform, it **brings the Lapse experience** to desktop and mobile with a **responsive**, **dynamic interface**, **smooth navigation**, and a feature set tailored for **real timelapse workflows** rather than a direct web clone.
 
@@ -130,7 +130,7 @@ cd Elapsed
 
 ### Elapsed CLI
 
-> While the main Elapsed cross-platform app was created for [Hackclub: The Game](https://game.hackclub.com), the Elapsed CLI was created for the [Campfire Flagship](https://flagship.hackclub.com) programme.
+> While the main Elapsed cross-platform app was created for [Hack Club: The Game](https://game.hackclub.com), the Elapsed CLI was created for the [Campfire Flagship](https://flagship.hackclub.com) programme.
 > With that said, the Elapsed CLI is mostly feature complete, and while it will receive updates for any breaking changes to the Lapse API projection, there are no new features planned.
 
 Besides the main cross-platform app, Elapsed also comes with a powerful CLI that supports all interactions with the Lapse API projection.
@@ -189,7 +189,7 @@ It is recommended to have a good understanding of [how Microsoft Kiota works](ht
 **Contributions are welcome** - please feel free to add **missing features**, **new styles**, or **fix bugs**.
 And of course, please open as many issues or pull requests as you like! *All contributions are helpful in their own way.*
 
-Because Elapsed is a Hackclub YSWS project, all time is tracked on Hackatime, Hackclub's software for tracking time spent across projects.
+Because Elapsed is a Hack Club YSWS project, all time is tracked on Hackatime, Hack Club's software for tracking time spent across projects.
 *(and yes, all work on Elapsed was tracked using Lapse!)*
 Below are the two main clocks for Elapsed (the first being Elapsed itself, and the second being the "Advanced Compiler Services for .NET" project, which is responsible for the Lapse API projection):
 
@@ -261,7 +261,7 @@ Elapsed/
 
 ### Project design choices
 
-As an **open-source project**, Elapsed is **developed in the open** by the Hackclub community and contributors from related projects.
+As an **open-source project**, Elapsed is **developed in the open** by the Hack Club community and contributors from related projects.
 The **goal is simple**: deliver a **modern**, **high-performance** timelapse experience that is **accessible**, **transparent**, and **continuously evolving** across Windows, Mac, Linux, Android, iOS and more!
 
 #### Code style
@@ -360,7 +360,7 @@ Elapse also relies on the following open source projects to function:
 
 This project is **free, open source software** licensed under the MIT License.
 
-Elapsed is a Hackclub project, made by teenagers, for teenagers.
+Elapsed is a Hack Club project, made by teenagers, for teenagers.
 There are no plans to make Elapsed a paid app.
 
 Please contact `@Lamparter` on Slack if you have legal questions.
@@ -368,5 +368,5 @@ Please contact `@Lamparter` on Slack if you have legal questions.
 ---
 
 <p align="center">
-	<sub>Made with &lt;3 by teenagers, for teenagers. <a href="https://hackclub.com">Learn more about Hackclub.</a></sub>
+	<sub>Made with &lt;3 by teenagers, for teenagers. <a href="https://hackclub.com">Learn more about Hack Club.</a></sub>
 </p>

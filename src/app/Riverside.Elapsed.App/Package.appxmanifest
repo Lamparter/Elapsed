@@ -4,10 +4,10 @@
 	xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
 	IgnorableNamespaces="uap rescap">
 
-	<Identity Name="Elapsed" Publisher="CN=Hackclub, O=Hack Club, L=Shelburne, S=Vermont, C=US" />
+	<Identity Name="Elapsed" Publisher="CN=Elapsed, O=Hack Club, L=Shelburne, S=Vermont, C=US" />
 
 	<Properties>
-		<PublisherDisplayName>Hackclub</PublisherDisplayName>
+		<PublisherDisplayName>Hack Club</PublisherDisplayName>
 		<DisplayName>Elapsed</DisplayName>
 	</Properties >
 

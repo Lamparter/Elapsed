@@ -35,7 +35,7 @@
 			<MinorVersion Condition="'$(Configuration)' == 'Debug'">$([MSBuild]::Add($(MinorVersion), 1))</MinorVersion>
 
 			<Product>Elapsed</Product>
-			<Company>Hackclub</Company>
+			<Company>Hack Club</Company>
 
 			<ReleaseLevel>final</ReleaseLevel>
 			<ReleaseLevel Condition="'$(Configuration)' == 'Debug'">preview</ReleaseLevel>
