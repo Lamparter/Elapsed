@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
         platform: [Desktop, Android, iOS, BrowserWASM]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
@@ -121,7 +121,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
 
@@ -170,7 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
 
@@ -219,7 +219,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
 

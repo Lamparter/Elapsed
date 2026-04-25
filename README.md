@@ -47,11 +47,6 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 
 ### Building from source
 
-> [!CAUTION]
-> There is currently an issue with Uno Platform that prevents parts of the app renderer from working.
-> The workaround for this issue is to replace all occurences the word `Preview` (**this is case sensitive!**) with `Debug` in `Elapsed.slnx` and `Directory.Build.props`.
-> For more information, see [unoplatform/studio#132](https://github.com/unoplatform/studio/issues/132), which contains a full report of the issue.
-
 > These are the instructions for building the Uno Platform project (main app).
 > For other projects, you can build as normal with the latest .NET SDK, without the prerequisites listed below.
 
@@ -294,12 +289,12 @@ Versions follow the format `{MAJOR}.{MINOR}.{DATE}[-{LEVEL}{PRERELEASE}]`, where
 
 For example, a version could look like this: `2.2.260220`, or `2.5.260522-preview2`.
 
-The Elapsed project contains two build configurations, <kbd>Release</kbd> and <kbd>Preview</kbd>.
+The Elapsed project contains two build configurations, <kbd>Release</kbd> and <kbd>Debug</kbd>.
 Each build configuration has slightly different settings, and feature flags within the app may be dependent on which build configuration is enabled.
-Generally, you should always build the 'Preview' configuration.
+Generally, you should always build the 'Debug' configuration.
 
 Releases are automatically published to GitHub and other marketplaces by the CD workflow.
-The CD workflow runs on every push to main, and publishes a new Preview channel release to the deployment.
+The CD workflow runs on every push to main, and publishes a new preview channel release to the deployment.
 A release to the mainstream publishing channel (all marketplaces) can be triggered by updating the `eng/CurrentVersion.props` with a new version number.
 
 The CD workflow deploys to the following marketplaces:

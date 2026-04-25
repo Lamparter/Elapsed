@@ -1,6 +1,6 @@
 <Solution>
 	<Configurations>
-		<BuildType Name="Preview" />
+		<BuildType Name="Debug" />
 		<BuildType Name="Release" />
 	</Configurations>
 	<Folder Name="/eng/">
