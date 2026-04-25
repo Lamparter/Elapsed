@@ -10,13 +10,6 @@
 
 	<ItemGroup>
 		<Compile Remove="Generated/**/*" />
-	</ItemGroup>
-	
-	<ItemGroup>
-		<PackageReference Include="System.CommandLine" Version="2.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Content Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.json">
 			<Link>Riverside.Elapsed.json</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -24,9 +17,13 @@
 			<PackagePath>tools/$(TargetFramework)/any</PackagePath>
 		</Content>
 	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="System.CommandLine" Version="2.0.0" />
+	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
+		<ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
 	</ItemGroup>
 
 </Project>
