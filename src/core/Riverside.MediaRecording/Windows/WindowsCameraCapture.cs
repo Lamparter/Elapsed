@@ -175,7 +175,7 @@ public sealed class WindowsCameraCapture : ICameraCapturable
 			Audio = audio;
 			_outputFile = outputFile;
 			_cameraIndex = cameraIndex;
-			_temporaryCapturePath = Path.Combine(Path.GetTempPath(), $"riverside-camera-{Guid.NewGuid():N}.avi");
+			_temporaryCapturePath = Path.GetTempFileName();
 			Status = RecordingStatus.NotStarted;
 		}
 
