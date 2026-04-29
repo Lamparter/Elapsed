@@ -15,6 +15,7 @@ env:
   CLI_PROJECT_PATH: '${{ github.workspace }}\src\platforms\Riverside.Elapsed.CommandLine\Riverside.Elapsed.CommandLine.csproj'
   API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed\Riverside.Elapsed.csproj'
   TUS_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.ResumableUploads\Riverside.ResumableUploads.csproj'
+  MEDIA_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.MediaRecording\Riverside.MediaRecording.csproj'
 
 jobs:
   formatting:
@@ -56,10 +57,12 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-        platform: [Desktop, Android, iOS, BrowserWASM]
+        project: [App]
+        targetFramework: [net10.0-windows10.0.26100.0, net10.0-desktop, net10.0-android, net10.0-ios, net10.0-browserwasm]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
-      PLATFORM: ${{ matrix.platform }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.app.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -93,37 +96,41 @@ jobs:
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build
-        if: matrix.platform == 'iOS'
+        if: contains(matrix.targetFramework, 'ios')
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Build `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
-            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
+            -p:TargetFramework=$env:TFM
 
       - name: Build & publish
-        if: matrix.platform != 'iOS'
+        if: contains(matrix.targetFramework, 'ios') == false
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Publish `
             -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
-            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed.App_${{ env.CONFIGURATION }}_net10.0-${{ env.PLATFORM }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\${{ env.CONFIGURATION }}\net10.0-${{ env.PLATFORM }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   cli:
     runs-on: windows-2025-vs2026
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         configuration: [Debug, Release]
+        project: [CommandLine]
+        targetFramework: [net10.0]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.cli.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -157,22 +164,27 @@ jobs:
           msbuild $env:CLI_PROJECT_PATH `
             -t:Publish `
             -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed.CommandLine_${{ env.CONFIGURATION }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.CONFIGURATION }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   api:
     runs-on: windows-2025-vs2026
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         configuration: [Debug, Release]
+        project: [Elapsed]
+        targetFramework: [netstandard2.1]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.api.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -206,22 +218,27 @@ jobs:
           msbuild $env:API_PROJECT_PATH `
             -t:Publish `
             -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed_${{ env.CONFIGURATION }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   tus:
     runs-on: windows-2025-vs2026
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         configuration: [Debug, Release]
+        project: [ResumableUploads]
+        targetFramework: [netstandard2.1]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.tus.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -251,13 +268,64 @@ jobs:
           msbuild $env:TUS_PROJECT_PATH `
             -t:Publish `
             -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.ResumableUploads_${{ env.CONFIGURATION }}'
-          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.CONFIGURATION }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+
+  media:
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: true
+      matrix:
+        configuration: [Debug, Release]
+        project: [MediaRecording]
+        targetFramework: [netstandard2.1]
+    env:
+      CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.media.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Dependencies
+        uses: "./.github/install_dependencies"
+        with:
+          dotnet-version: 10.0.102
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore
+        run: |
+          msbuild $env:SOLUTION_PATH `
+            -t:Restore `
+            -p:Platform="Any CPU" `
+            -p:Configuration=$env:CONFIGURATION
+
+      - name: Build & publish
+        run: |
+          msbuild $env:MEDIA_PROJECT_PATH `
+            -t:Publish `
+            -p:Platform="Any CPU" `
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.MediaRecording\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
 #  test:
 #    name: Unit Tests
