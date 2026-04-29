@@ -1,6 +1,6 @@
 # Elapsed
 
-#### "Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hack Club's timelapse tracking tool.
+#### Elapsed is Hack Club's new timelapse tracking tool and media sharing platform.
 
 ---
 

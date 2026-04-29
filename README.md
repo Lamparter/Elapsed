@@ -5,8 +5,7 @@
 > 	<img src=".github/assets/Source_Hackclub.svg" alt="Find it on Hack Club" height="48" />
 > </a>
 >
-> Elapsed is currently in active development for Hack Club's [Campfire Flagship](https://flagship.hackclub.com) and [Hack Club: The Game](https://game.hackclub.com) programmes.
-> *(this is not double dipping!)*
+> Elapsed is currently in active development as a part of the ["Hack Club: The Game"](https://game.hackclub.com) programme, an event in New York City, organised by Hack Club.
 >
 > If you are a Hack Club member and are interested in contributing, please reach out via the [`#elapsed`](https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU) channel on the Hack Club Slack!
 
@@ -18,7 +17,7 @@
 
 <h1>Elapsed</h1>
 
-<h4>"Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hack Club's timelapse tracking tool.</h4>
+<h4>Elapsed is Hack Club's new timelapse tracking tool and media sharing platform.</h4>
 
 ---
 
@@ -166,15 +165,11 @@ It is recommended to have a good understanding of [how Microsoft Kiota works](ht
 > It can run on a huge variety of devices (as supported by Uno Platform and the .NET Runtime).
 > *See the "design choices" section for more info.*
 
-- Android and VR: Elapsed supports all modern Android devices, including Android VR devices and Meta Quest.
-- iOS and iPadOS: Elapsed supports the iOS (including iPadOS) platform target.
-- Windows, Mac and Linux: Elapsed provides a full, native app UX for all major desktop operating systems.
-
-> Uno Platform supports *even more* platform targets than Elapsed does, however:
-> - Elapsed does not need to build for the WASM platform because [there is already a Lapse web client](https://lapse.hackclub.com).
-> - Elapsed does not support the native Windows App SDK target as the Skia desktop target already satisfies the needs of Elapsed, and ensures consistency between desktop operating systems.
->
-> *Moving to the full WinAppSDK target may be considered in the future as many UI controls from the Windows Community Toolkit do not support Uno's Skia desktop framebuffer platform.*
+- Web: Elapsed is available for use on the web, just like the classic Lapse client.
+- Android and VR: Elapsed supports all modern Android phones.
+- iOS and iPadOS: Elapsed supports iOS and iPadOS.
+- Mac and Linux: Elapsed provides a fully integrated UX for Linux (Wayland/X11) and macOS.
+- Windows: Elapsed runs as a self-contained Windows App SDK app on Windows.
 
 <!-- add images of Elapsed on different platforms when ready -->
 
@@ -291,24 +286,27 @@ For example, a version could look like this: `2.2.260220`, or `2.5.260522-previe
 
 The Elapsed project contains two build configurations, <kbd>Release</kbd> and <kbd>Debug</kbd>.
 Each build configuration has slightly different settings, and feature flags within the app may be dependent on which build configuration is enabled.
-Generally, you should always build the 'Debug' configuration.
+Generally, you should always build the 'Debug' configuration for development purposes, as it enables extra feature flags for debugging.
 
-Releases are automatically published to GitHub and other marketplaces by the CD workflow.
-The CD workflow runs on every push to main, and publishes a new preview channel release to the deployment.
-A release to the mainstream publishing channel (all marketplaces) can be triggered by updating the `eng/CurrentVersion.props` with a new version number.
+Releases are automatically published to GitHub and other marketplaces (as listed below) by the CD workflow.
+The release process can be induced by updating the `eng/CurrentVersion.props` with a new version number, which activates the CD pipeline.
 
 The CD workflow deploys to the following marketplaces:
 - GitHub Releases
 - NuGet
+- Web
 - ~~Microsoft Store~~
 - ~~Google Play Store~~
 - ~~Apple App Store~~
 
 Preview versions are only ever published to GitHub releases and NuGet.
-The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically by the CD workflow, based on what the previous release version was.
+The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically as a part of the build process, based on what the previous release version was.
 For example, if there is an existing preview with preview version 2, creating a new preview release will have the preview version value of 3.
 
 #### Trimming and native AOT compilation
+
+> [!NOTE]
+> Trimming and Native AOT compilation only occurs when the 'release' configuration of any project is built.
 
 The Elapsed API projection is a .NET Standard 2.0 class library and executable projects are .NET 10 binaries; all *should* support Native AOT and trimming out of the box.
 
@@ -352,6 +350,7 @@ Elapse also relies on the following open source projects to function:
 - [Lapse](https://github.com/hackclub/lapse)'s API
 - [Hackatime](https://github.com/hackclub/hackatime)'s API
 - [Advanced Compiler Services for .NET](https://github.com/Lamparter/CompilerPlatform)
+- [Win32 P/Invoke bindings for .NET Standard](https://github.com/Lamparter/Win32)
 - [.NET Command Line APIs](https://github.com/dotnet/command-line-api)
 - [Skia](https://github.com/google/skia) and [SkiaSharp](https://github.com/mono/SkiaSharp)
 - [Sentry](https://github.com/getsentry/sentry-dotnet)
