@@ -275,7 +275,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
         project: [MediaRecording]
-        targetFramework: [netstandard2.1]
+        targetFramework: [net10.0-windows]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
