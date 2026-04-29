@@ -74,7 +74,7 @@ jobs:
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
         with:
-          target-platform: ${{ matrix.platform }}
+          target-platform: ${{ matrix.targetFramework }}
           dotnet-version: 10.0.102
           global-json-file: ${{ env.GLOBAL_JSON_PATH }}
 
