@@ -75,6 +75,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
 		<Configurations>Debug;Release</Configurations>
+		<Platform>Any CPU</Platform>
 
 		<IsWeb>$(TargetFramework.Contains('browserwasm'))</IsWeb>
 

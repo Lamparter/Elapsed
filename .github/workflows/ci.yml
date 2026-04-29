@@ -92,7 +92,6 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build
@@ -100,7 +99,6 @@ jobs:
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Build `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
@@ -109,7 +107,6 @@ jobs:
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
@@ -156,14 +153,12 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:CLI_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
@@ -210,14 +205,12 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:API_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
@@ -260,14 +253,12 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:TUS_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
@@ -310,14 +301,12 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:MEDIA_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
