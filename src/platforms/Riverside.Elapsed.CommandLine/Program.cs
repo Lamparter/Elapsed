@@ -368,7 +368,7 @@ public class Program
 			var result = GetTaskResult(task);
 			if (result is null)
 			{
-				Console.WriteLine("{\"status\":\"ok\"}");
+				Console.WriteLine("The operation completed succesfully.");
 				return 0;
 			}
 
