@@ -3,6 +3,30 @@
 	<Import Project="$(MSBuildThisFileDirectory)\eng\CurrentVersion.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\PackageMetadata.props" />
 
+	<!-- Generic properties -->
+	<PropertyGroup>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>14.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<Configurations>Debug;Release</Configurations>
+		<Platform>Any CPU</Platform>
+
+		<IsWeb>$(TargetFramework.Contains('browserwasm'))</IsWeb>
+
+		<!--
+		Remove build warnings:
+			NU1507: Warning when there are multiple package sources when using CPM with no source mapping
+			NETSDK1201: Warning that specifying RID won't create self containing app
+			PRI257: Ignore default language (en) not being one of the included resources (eg en-us, en-uk)
+		-->
+		<NoWarn>$(NoWarn);NU1507;NETSDK1201;PRI257</NoWarn>
+	</PropertyGroup>
+	
 	<!-- Directories -->
 	<PropertyGroup>
 		<RootDirectory Condition=" '$(RootDirectory)' == '' ">$(MSBuildThisFileDirectory)</RootDirectory>
@@ -13,10 +37,11 @@
 		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\platforms</AppDirectory>
 		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
 
-		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
+		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Platform)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
 		<WebOutputDirectory>$(RootDirectory)wwwroot\</WebOutputDirectory>
 	</PropertyGroup>
 
+	<!-- Versioning (defined at build) -->
 	<Target Name="GetLatestGitTag" Condition="'$(_LatestGitTag)' == ''">
 		<Exec Command="git describe --tags --abbrev=0" ConsoleToMSBuild="true" IgnoreExitCode="true">
 			<Output TaskParameter="ConsoleOutput" PropertyName="_LatestGitTag" />
@@ -63,30 +88,6 @@
 			<PackageVersion>$(DisplayVersion)</PackageVersion>
 		</PropertyGroup>
 	</Target>
-
-	<!-- Generic properties -->
-	<PropertyGroup>
-		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
-
-		<ImplicitUsings>enable</ImplicitUsings>
-		<LangVersion>14.0</LangVersion>
-		<Nullable>enable</Nullable>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
-		<Configurations>Debug;Release</Configurations>
-		<Platform>Any CPU</Platform>
-
-		<IsWeb>$(TargetFramework.Contains('browserwasm'))</IsWeb>
-
-		<!--
-		Remove build warnings:
-			NU1507: Warning when there are multiple package sources when using CPM with no source mapping
-			NETSDK1201: Warning that specifying RID won't create self containing app
-			PRI257: Ignore default language (en) not being one of the included resources (eg en-us, en-uk)
-		-->
-		<NoWarn>$(NoWarn);NU1507;NETSDK1201;PRI257</NoWarn>
-	</PropertyGroup>
 
 	<!-- Deterministic build -->
 	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true'">
