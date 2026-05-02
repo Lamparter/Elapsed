@@ -16,7 +16,6 @@ env:
   API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed\Riverside.Elapsed.csproj'
   TUS_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.ResumableUploads\Riverside.ResumableUploads.csproj'
   MEDIA_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.MediaRecording\Riverside.MediaRecording.csproj'
-  PLATFORM: 'AnyCPU'
 
 jobs:
   formatting:
@@ -115,7 +114,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   cli:
     runs-on: windows-2025-vs2026
@@ -167,7 +166,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   api:
     runs-on: windows-2025-vs2026
@@ -219,7 +218,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   tus:
     runs-on: windows-2025-vs2026
@@ -267,7 +266,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   media:
     runs-on: windows-2025-vs2026
@@ -315,7 +314,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.MediaRecording\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.MediaRecording\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
 #  test:
 #    name: Unit Tests
