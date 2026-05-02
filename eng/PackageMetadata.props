@@ -9,7 +9,7 @@
 		<RepositoryUrl>https://github.com/Lamparter/Elapsed</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>lapse; timelapse; elapsed; uno; unoplatform; windows; android; linux; macos; iphone; hackclub; riverside</PackageTags>
-		<Description>"Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hack Club's timelapse tracking tool</Description>
+		<Description>Elapsed is Hack Club's new timelapse tracking tool and media sharing platform.</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<IncludeSymbols>True</IncludeSymbols>

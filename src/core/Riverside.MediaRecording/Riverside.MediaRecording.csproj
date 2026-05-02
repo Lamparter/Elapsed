@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<Description>"Riverside.MediaRecording" is a cross-platform API that allows recording media from various sources, including the camera, screen, and microphone.</Description>
+
 		<TargetFrameworks>net10.0-windows</TargetFrameworks>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
