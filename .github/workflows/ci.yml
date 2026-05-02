@@ -16,6 +16,7 @@ env:
   API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed\Riverside.Elapsed.csproj'
   TUS_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.ResumableUploads\Riverside.ResumableUploads.csproj'
   MEDIA_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.MediaRecording\Riverside.MediaRecording.csproj'
+  PLATFORM: 'AnyCPU'
 
 jobs:
   formatting:
@@ -62,7 +63,7 @@ jobs:
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
-      ID: runtime.app.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -114,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   cli:
     runs-on: windows-2025-vs2026
@@ -127,7 +128,7 @@ jobs:
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
-      ID: runtime.cli.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -166,7 +167,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   api:
     runs-on: windows-2025-vs2026
@@ -179,7 +180,7 @@ jobs:
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
-      ID: runtime.api.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -218,7 +219,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   tus:
     runs-on: windows-2025-vs2026
@@ -231,7 +232,7 @@ jobs:
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
-      ID: runtime.tus.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -266,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   media:
     runs-on: windows-2025-vs2026
@@ -279,7 +280,7 @@ jobs:
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
-      ID: runtime.media.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -314,7 +315,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: '${{ env.ID }}'
-          path: '${{ github.workspace }}\bin\Riverside.MediaRecording\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+          path: '${{ github.workspace }}\bin\Riverside.MediaRecording\${{ env.PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
 #  test:
 #    name: Unit Tests
