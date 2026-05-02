@@ -39,7 +39,7 @@ jobs:
           $changedFiles = (git diff --diff-filter=d --name-only HEAD~1) -split "\n" | Where-Object {$_ -like "*.xaml"}
           foreach ($file in $changedFiles)
           {
-            xstyler -p -l None -f $file
+            xstyler -p -l None -f $file --indent-tabs true --comment-spaces 1
             if ($LASTEXITCODE -ne 0)
             {
               echo "::error file=$file::Format check failed"
