@@ -37,8 +37,9 @@
 		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\platforms</AppDirectory>
 		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
 
+		<!-- The WASM binary output directory must be relative due to a bug in the SDK, see https://github.com/unoplatform/Uno.Wasm.Bootstrap/issues/1058 -->
 		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Platform)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
-		<WebOutputDirectory>$(RootDirectory)wwwroot\</WebOutputDirectory>
+		<WebOutputDirectory>..\..\..\wwwroot\</WebOutputDirectory> <!--<WebOutputDirectory>$(RootDirectory)wwwroot\</WebOutputDirectory>-->
 
 		<PublishDir>$(CIOutputDirectory)</PublishDir>
 		<PublishDir Condition="'$(IsWeb)' == 'true'">$(WebOutputDirectory)</PublishDir>
