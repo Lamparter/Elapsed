@@ -3,7 +3,7 @@ description: ""
 
 inputs:
   target-platform:
-    description: 'The platform to install dependencies for. #See available values at https://platform.uno/docs/articles/external/uno.check/doc/using-uno-check.html'
+    description: 'The platform to install dependencies for. See available values at https://platform.uno/docs/articles/external/uno.check/doc/using-uno-check.html'
     required: false
     default: 'all'
   dotnet-version:
@@ -39,7 +39,8 @@ runs:
       run: |
         dotnet tool install -g uno.check
         ("${{ inputs.target-platform }} ".ToLower().Split(' ') | ForEach-Object {
-          $target = $_.Replace("_win", "").Replace("_macos", "")
+          $target = $_.Replace("_win", "").Replace("_macos", "").Replace("browserwasm", "wasm").Replace("windows", "wasdk")
+          $target = $target -replace '^net[^-]*-', ''
           if (![string]::IsNullOrEmpty($target)) {
             echo "target: $target"
             uno-check -v --ci --non-interactive --fix --target $target --skip vswin --skip vsmac --skip xcode --skip androidemulator --skip dotnetnewunotemplates

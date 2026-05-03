@@ -1,68 +1,7 @@
-<Project InitialTargets="GetLatestGitTag">
+<Project>
 	<Import Project="$(MSBuildThisFileDirectory)\eng\AdditionalFiles.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\CurrentVersion.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\PackageMetadata.props" />
-
-	<!-- Directories -->
-	<PropertyGroup>
-		<RootDirectory Condition=" '$(RootDirectory)' == '' ">$(MSBuildThisFileDirectory)</RootDirectory>
-		<SourceDirectory Condition=" '$(SourceDirectory)' == '' ">$(MSBuildThisFileDirectory)src</SourceDirectory>
-		<BuildDirectory Condition=" '$(BuildDirectory)' == '' ">$(RootDirectory)eng</BuildDirectory>
-		<RepositoryFilesDirectory Condition=" '$(RepositoryFilesDirectory)' == '' ">$(RootDirectory).github</RepositoryFilesDirectory>
-
-		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\app</AppDirectory>
-		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
-
-		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
-		<WebOutputDirectory>$(RootDirectory)wwwroot\</WebOutputDirectory>
-	</PropertyGroup>
-
-	<Target Name="GetLatestGitTag" Condition="'$(_LatestGitTag)' == ''">
-		<Exec Command="git describe --tags --abbrev=0" ConsoleToMSBuild="true" IgnoreExitCode="true">
-			<Output TaskParameter="ConsoleOutput" PropertyName="_LatestGitTag" />
-		</Exec>
-		<PropertyGroup>
-			<_LatestGitTag>$(_LatestGitTag.Trim())</_LatestGitTag>
-			<_BetaMatch>$([System.Text.RegularExpressions.Regex]::Match('$(_LatestGitTag)', '-preview(\d+)$').Groups[1].Value)</_BetaMatch>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' == ''">
-			<BetaVersion>1</BetaVersion>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
-			<BetaVersion>$([MSBuild]::Add($(_BetaMatch), 1))</BetaVersion>
-		</PropertyGroup>
-		<PropertyGroup>
-			<MinorVersion Condition="'$(Configuration)' == 'Preview'">$([MSBuild]::Add($(MinorVersion), 1))</MinorVersion>
-
-			<Product>Elapsed</Product>
-			<Company>Hackclub</Company>
-
-			<ReleaseLevel>final</ReleaseLevel>
-			<ReleaseLevel Condition="'$(Configuration)' == 'Preview'">preview</ReleaseLevel>
-			<_LatestGitTag></_LatestGitTag>
-			<_BetaMatch></_BetaMatch>
-
-			<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
-			<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
-			<CurrentDay>$([System.DateTime]::Now.ToString("dd"))</CurrentDay>
-			<BuildDate>$(CurrentYear)$(CurrentMonth)$(CurrentDay)</BuildDate>
-
-			<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
-			<!--<InformationalVersion>$(Product), Version=$(MajorVersion).$(MinorVersion), Channel=$(ReleaseLevel), Build=$(BuildDate)</InformationalVersion>-->
-			<BaseDisplayVersion>$(AssemblyVersion).$(BuildDate)</BaseDisplayVersion>
-
-			<ApplicationTitle>$(Product)</ApplicationTitle>
-			<ApplicationId>$(MSBuildProjectName)</ApplicationId>
-			<ApplicationDisplayVersion>$(AssemblyVersion).0</ApplicationDisplayVersion>
-			<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
-			<ApplicationPublisher>$(Company)</ApplicationPublisher>
-
-			<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
-			<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(BaseDisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
-			<Version>$(DisplayVersion)</Version>
-			<PackageVersion>$(DisplayVersion)</PackageVersion>
-		</PropertyGroup>
-	</Target>
 
 	<!-- Generic properties -->
 	<PropertyGroup>
@@ -74,8 +13,8 @@
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-		<Configurations>Preview;Release</Configurations>
-		<DefineConstants Condition="'$(Configuration)' == 'Preview'">$(DefineConstants);DEBUG</DefineConstants>
+		<Configurations>Debug;Release</Configurations>
+		<Platform>AnyCPU</Platform>
 
 		<IsWeb>$(TargetFramework.Contains('browserwasm'))</IsWeb>
 
@@ -87,16 +26,61 @@
 		-->
 		<NoWarn>$(NoWarn);NU1507;NETSDK1201;PRI257</NoWarn>
 	</PropertyGroup>
+	
+	<!-- Directories -->
+	<PropertyGroup>
+		<RootDirectory Condition="'$(RootDirectory)' == ''">$(MSBuildThisFileDirectory)</RootDirectory>
+		<SourceDirectory Condition="'$(SourceDirectory)' == ''">$(MSBuildThisFileDirectory)src</SourceDirectory>
+		<BuildDirectory Condition="'$(BuildDirectory)' == ''">$(RootDirectory)eng</BuildDirectory>
+		<RepositoryFilesDirectory Condition="'$(RepositoryFilesDirectory)' == ''">$(RootDirectory).github</RepositoryFilesDirectory>
 
-	<!-- Deterministic build -->
-	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true'">
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<AppDirectory Condition="'$(AppDirectory)' == ''">$(SourceDirectory)\platforms</AppDirectory>
+		<SharedDirectory Condition="'$(SharedDirectory)' == ''">$(SourceDirectory)\core</SharedDirectory>
+
+		<!-- The WASM binary output directory must be relative due to a bug in the SDK, see https://github.com/unoplatform/Uno.Wasm.Bootstrap/issues/1058 -->
+		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Platform)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
+		<WebOutputDirectory>..\..\..\wwwroot\</WebOutputDirectory> <!--<WebOutputDirectory>$(RootDirectory)wwwroot\</WebOutputDirectory>-->
+
 		<PublishDir>$(CIOutputDirectory)</PublishDir>
 		<PublishDir Condition="'$(IsWeb)' == 'true'">$(WebOutputDirectory)</PublishDir>
 		<PackageOutputPath>$(PublishDir)</PackageOutputPath>
 	</PropertyGroup>
 
-	<Target Condition="'$(IsWeb)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true'" Name="CopyWASMBinaryToArtifactDirectory" AfterTargets="Publish">
+	<!-- Versioning (defined at build) -->
+	<PropertyGroup>
+		<Product>Elapsed</Product>
+		<Company>Hack Club</Company>
+
+		<ReleaseLevel Condition="'$(Configuration)' == 'Debug'">preview</ReleaseLevel>
+		<BetaVersion Condition="'$(BetaVersion)' == '' and '$(Configuration)' == 'Debug'">1</BetaVersion>
+		<BetaVersion Condition="'$(BetaVersion)' == '' and '$(Configuration)' != 'Debug'">0</BetaVersion>
+
+		<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
+		<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
+		<CurrentDay>$([System.DateTime]::Now.ToString("dd"))</CurrentDay>
+		<BuildDate>$(CurrentYear)$(CurrentMonth)$(CurrentDay)</BuildDate>
+
+		<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
+		<BaseDisplayVersion>$(AssemblyVersion).$(BuildDate)</BaseDisplayVersion>
+
+		<ApplicationTitle>$(Product)</ApplicationTitle>
+		<ApplicationId>$(MSBuildProjectName)</ApplicationId>
+		<ApplicationDisplayVersion>$(AssemblyVersion).$(BetaVersion)</ApplicationDisplayVersion>
+		<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
+		<ApplicationPublisher>$(Company)</ApplicationPublisher>
+
+		<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
+		<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(BaseDisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
+		<Version>$(DisplayVersion)</Version>
+		<PackageVersion>$(DisplayVersion)</PackageVersion>
+	</PropertyGroup>
+
+	<!-- Deterministic build -->
+	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<Target Condition="'$(IsWeb)' == 'true'" Name="CopyWASMBinaryToArtifactDirectory" AfterTargets="Publish">
 		<MakeDir Directories="$(CIOutputDirectory)" />
 		<ItemGroup>
 			<WASMBinary Include="$(WebOutputDirectory)\**\*.*" />

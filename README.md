@@ -5,10 +5,9 @@
 > 	<img src=".github/assets/Source_Hackclub.svg" alt="Find it on Hack Club" height="48" />
 > </a>
 >
-> Elapsed is currently in active development for Hackclub's [Campfire Flagship](https://flagship.hackclub.com) and [Hackclub: The Game](https://game.hackclub.com) programmes.
-> *(this is not double dipping!)*
+> Elapsed is currently in active development as a part of the ["Hack Club: The Game"](https://game.hackclub.com) programme, an event in New York City, organised by Hack Club.
 >
-> If you are a Hackclub member and are interested in contributing, please reach out via the [`#elapsed`](https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU) channel on the Hackclub Slack!
+> If you are a Hack Club member and are interested in contributing, please reach out via the [`#elapsed`](https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU) channel on the Hack Club Slack!
 
 <!--
 <p align="left">
@@ -18,11 +17,11 @@
 
 <h1>Elapsed</h1>
 
-<h4>"Elapsed" is a .NET wrapper and cross-platform application for Lapse, Hackclub's timelapse tracking tool.</h4>
+<h4>Elapsed is Hack Club's new timelapse tracking tool and media sharing platform.</h4>
 
 ---
 
-Introducing **Elapsed**, a **high-performance**, **cross-platform**, **native app** for Hackclub's timelapse programme, [Lapse](https://lapse.hackclub.com), complete with a **modern UI** that is built from the ground up.
+Introducing **Elapsed**, a **high-performance**, **cross-platform**, **native app** for Hack Club's timelapse programme, [Lapse](https://lapse.hackclub.com), complete with a **modern UI** that is built from the ground up.
 It is designed to feel **just like any other native app** on every platform it supports.
 Built with .NET and Uno Platform, it **brings the Lapse experience** to desktop and mobile with a **responsive**, **dynamic interface**, **smooth navigation**, and a feature set tailored for **real timelapse workflows** rather than a direct web clone.
 
@@ -46,11 +45,6 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 </p>
 
 ### Building from source
-
-> [!CAUTION]
-> There is currently an issue with Uno Platform that prevents parts of the app renderer from working.
-> The workaround for this issue is to replace all occurences the word `Preview` (**this is case sensitive!**) with `Debug` in `Elapsed.slnx` and `Directory.Build.props`.
-> For more information, see [unoplatform/studio#132](https://github.com/unoplatform/studio/issues/132), which contains a full report of the issue.
 
 > These are the instructions for building the Uno Platform project (main app).
 > For other projects, you can build as normal with the latest .NET SDK, without the prerequisites listed below.
@@ -135,7 +129,7 @@ cd Elapsed
 
 ### Elapsed CLI
 
-> While the main Elapsed cross-platform app was created for [Hackclub: The Game](https://game.hackclub.com), the Elapsed CLI was created for the [Campfire Flagship](https://flagship.hackclub.com) programme.
+> While the main Elapsed cross-platform app was created for [Hack Club: The Game](https://game.hackclub.com), the Elapsed CLI was created for the [Campfire Flagship](https://flagship.hackclub.com) programme.
 > With that said, the Elapsed CLI is mostly feature complete, and while it will receive updates for any breaking changes to the Lapse API projection, there are no new features planned.
 
 Besides the main cross-platform app, Elapsed also comes with a powerful CLI that supports all interactions with the Lapse API projection.
@@ -161,7 +155,7 @@ The Kiota generator emits clean C# code based on the [Lapse API documentation](h
 Using the client in the Lapse API is incredibly simple - you must pass a request adapter instance (`IRequestAdapter`) into the API client class constructor (`Riverside.Elapsed.ApiClient`).
 The API client class is an abstraction over HTTP requests that is specific to the Lapse API.
 
-If you are unsure how to consume the API client class, the [Elapsed CLI project](https://github.com/Lamparter/Elapsed/tree/main/src/app/Riverside.Elapsed.CommandLine) is an excellent example implementation.
+If you are unsure how to consume the API client class, the [Elapsed CLI project](https://github.com/Lamparter/Elapsed/tree/main/src/platforms/Riverside.Elapsed.CommandLine) is an excellent example implementation.
 It is recommended to have a good understanding of [how Microsoft Kiota works](https://learn.microsoft.com/en-us/openapi/kiota/design) before using the Elapsed API projection.
 
 ### Supported platforms
@@ -171,15 +165,11 @@ It is recommended to have a good understanding of [how Microsoft Kiota works](ht
 > It can run on a huge variety of devices (as supported by Uno Platform and the .NET Runtime).
 > *See the "design choices" section for more info.*
 
-- Android and VR: Elapsed supports all modern Android devices, including Android VR devices and Meta Quest.
-- iOS and iPadOS: Elapsed supports the iOS (including iPadOS) platform target.
-- Windows, Mac and Linux: Elapsed provides a full, native app UX for all major desktop operating systems.
-
-> Uno Platform supports *even more* platform targets than Elapsed does, however:
-> - Elapsed does not need to build for the WASM platform because [there is already a Lapse web client](https://lapse.hackclub.com).
-> - Elapsed does not support the native Windows App SDK target as the Skia desktop target already satisfies the needs of Elapsed, and ensures consistency between desktop operating systems.
->
-> *Moving to the full WinAppSDK target may be considered in the future as many UI controls from the Windows Community Toolkit do not support Uno's Skia desktop framebuffer platform.*
+- Web: Elapsed is available for use on the web, just like the classic Lapse client.
+- Android and VR: Elapsed supports all modern Android phones.
+- iOS and iPadOS: Elapsed supports iOS and iPadOS.
+- Mac and Linux: Elapsed provides a fully integrated UX for Linux (Wayland/X11) and macOS.
+- Windows: Elapsed runs as a self-contained Windows App SDK app on Windows.
 
 <!-- add images of Elapsed on different platforms when ready -->
 
@@ -194,7 +184,7 @@ It is recommended to have a good understanding of [how Microsoft Kiota works](ht
 **Contributions are welcome** - please feel free to add **missing features**, **new styles**, or **fix bugs**.
 And of course, please open as many issues or pull requests as you like! *All contributions are helpful in their own way.*
 
-Because Elapsed is a Hackclub YSWS project, all time is tracked on Hackatime, Hackclub's software for tracking time spent across projects.
+Because Elapsed is a Hack Club YSWS project, all time is tracked on Hackatime, Hack Club's software for tracking time spent across projects.
 *(and yes, all work on Elapsed was tracked using Lapse!)*
 Below are the two main clocks for Elapsed (the first being Elapsed itself, and the second being the "Advanced Compiler Services for .NET" project, which is responsible for the Lapse API projection):
 
@@ -266,7 +256,7 @@ Elapsed/
 
 ### Project design choices
 
-As an **open-source project**, Elapsed is **developed in the open** by the Hackclub community and contributors from related projects.
+As an **open-source project**, Elapsed is **developed in the open** by the Hack Club community and contributors from related projects.
 The **goal is simple**: deliver a **modern**, **high-performance** timelapse experience that is **accessible**, **transparent**, and **continuously evolving** across Windows, Mac, Linux, Android, iOS and more!
 
 #### Code style
@@ -294,26 +284,29 @@ Versions follow the format `{MAJOR}.{MINOR}.{DATE}[-{LEVEL}{PRERELEASE}]`, where
 
 For example, a version could look like this: `2.2.260220`, or `2.5.260522-preview2`.
 
-The Elapsed project contains two build configurations, <kbd>Release</kbd> and <kbd>Preview</kbd>.
+The Elapsed project contains two build configurations, <kbd>Release</kbd> and <kbd>Debug</kbd>.
 Each build configuration has slightly different settings, and feature flags within the app may be dependent on which build configuration is enabled.
-Generally, you should always build the 'Preview' configuration.
+Generally, you should always build the 'Debug' configuration for development purposes, as it enables extra feature flags for debugging.
 
-Releases are automatically published to GitHub and other marketplaces by the CD workflow.
-The CD workflow runs on every push to main, and publishes a new Preview channel release to the deployment.
-A release to the mainstream publishing channel (all marketplaces) can be triggered by updating the `eng/CurrentVersion.props` with a new version number.
+Releases are automatically published to GitHub and other marketplaces (as listed below) by the CD workflow.
+The release process can be induced by updating the `eng/CurrentVersion.props` with a new version number, which activates the CD pipeline.
 
 The CD workflow deploys to the following marketplaces:
 - GitHub Releases
 - NuGet
+- Web
 - ~~Microsoft Store~~
 - ~~Google Play Store~~
 - ~~Apple App Store~~
 
 Preview versions are only ever published to GitHub releases and NuGet.
-The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically by the CD workflow, based on what the previous release version was.
+The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically as a part of the build process, based on what the previous release version was.
 For example, if there is an existing preview with preview version 2, creating a new preview release will have the preview version value of 3.
 
 #### Trimming and native AOT compilation
+
+> [!NOTE]
+> Trimming and Native AOT compilation only occurs when the 'release' configuration of any project is built.
 
 The Elapsed API projection is a .NET Standard 2.0 class library and executable projects are .NET 10 binaries; all *should* support Native AOT and trimming out of the box.
 
@@ -357,6 +350,7 @@ Elapse also relies on the following open source projects to function:
 - [Lapse](https://github.com/hackclub/lapse)'s API
 - [Hackatime](https://github.com/hackclub/hackatime)'s API
 - [Advanced Compiler Services for .NET](https://github.com/Lamparter/CompilerPlatform)
+- [Win32 P/Invoke bindings for .NET Standard](https://github.com/Lamparter/Win32)
 - [.NET Command Line APIs](https://github.com/dotnet/command-line-api)
 - [Skia](https://github.com/google/skia) and [SkiaSharp](https://github.com/mono/SkiaSharp)
 - [Sentry](https://github.com/getsentry/sentry-dotnet)
@@ -365,7 +359,7 @@ Elapse also relies on the following open source projects to function:
 
 This project is **free, open source software** licensed under the MIT License.
 
-Elapsed is a Hackclub project, made by teenagers, for teenagers.
+Elapsed is a Hack Club project, made by teenagers, for teenagers.
 There are no plans to make Elapsed a paid app.
 
 Please contact `@Lamparter` on Slack if you have legal questions.
@@ -373,5 +367,5 @@ Please contact `@Lamparter` on Slack if you have legal questions.
 ---
 
 <p align="center">
-	<sub>Made with &lt;3 by teenagers, for teenagers. <a href="https://hackclub.com">Learn more about Hackclub.</a></sub>
+	<sub>Made with &lt;3 by teenagers, for teenagers. <a href="https://hackclub.com">Learn more about Hack Club.</a></sub>
 </p>

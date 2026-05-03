@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<Description>"Riverside.ResumableUploads" is a .NET client for resumable file uploads over the TUS protocol.</Description>
+
 		<TargetFramework>netstandard2.1</TargetFramework>
 	</PropertyGroup>
 

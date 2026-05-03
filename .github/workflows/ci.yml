@@ -11,10 +11,11 @@ env:
   WORKING_DIR: ${{ github.workspace }}
   GLOBAL_JSON_PATH: '${{ github.workspace }}\global.json'
   SOLUTION_PATH: '${{ github.workspace }}\Elapsed.slnx'
-  APP_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.App\Riverside.Elapsed.App.csproj'
-  CLI_PROJECT_PATH: '${{ github.workspace }}\src\app\Riverside.Elapsed.CommandLine\Riverside.Elapsed.CommandLine.csproj'
+  APP_PROJECT_PATH: '${{ github.workspace }}\src\platforms\Riverside.Elapsed.App\Riverside.Elapsed.App.csproj'
+  CLI_PROJECT_PATH: '${{ github.workspace }}\src\platforms\Riverside.Elapsed.CommandLine\Riverside.Elapsed.CommandLine.csproj'
   API_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.Elapsed\Riverside.Elapsed.csproj'
   TUS_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.ResumableUploads\Riverside.ResumableUploads.csproj'
+  MEDIA_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.MediaRecording\Riverside.MediaRecording.csproj'
 
 jobs:
   formatting:
@@ -38,7 +39,7 @@ jobs:
           $changedFiles = (git diff --diff-filter=d --name-only HEAD~1) -split "\n" | Where-Object {$_ -like "*.xaml"}
           foreach ($file in $changedFiles)
           {
-            xstyler -p -l None -f $file
+            xstyler -p -l None -f $file --indent-tabs true --comment-spaces 1
             if ($LASTEXITCODE -ne 0)
             {
               echo "::error file=$file::Format check failed"
@@ -55,11 +56,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Preview, Release]
-        platform: [Desktop, Android, iOS, BrowserWASM]
+        configuration: [Debug, Release]
+        project: [App]
+        targetFramework: [net10.0-windows10.0.26100.0, net10.0-desktop, net10.0-android, net10.0-ios, net10.0-browserwasm]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
-      PLATFORM: ${{ matrix.platform }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -71,7 +74,7 @@ jobs:
       - name: Install Dependencies
         uses: "./.github/install_dependencies"
         with:
-          target-platform: ${{ matrix.platform }}
+          target-platform: ${{ matrix.targetFramework }}
           dotnet-version: 10.0.102
           global-json-file: ${{ env.GLOBAL_JSON_PATH }}
 
@@ -89,41 +92,42 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build
-        if: matrix.platform == 'iOS'
+        if: contains(matrix.targetFramework, 'ios')
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Build `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
-            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
+            -p:TargetFramework=$env:TFM
 
       - name: Build & publish
-        if: matrix.platform != 'iOS'
+        if: contains(matrix.targetFramework, 'ios') == false
         run: |
           msbuild $env:APP_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION `
-            -p:TargetFramework=net10.0-$($env:PLATFORM.ToLower())
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed.App_${{ env.CONFIGURATION }}_net10.0-${{ env.PLATFORM }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\${{ env.CONFIGURATION }}\net10.0-${{ env.PLATFORM }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.App\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   cli:
     runs-on: windows-2025-vs2026
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
+        project: [CommandLine]
+        targetFramework: [net10.0]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -149,30 +153,33 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:CLI_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed.CommandLine_${{ env.CONFIGURATION }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\${{ env.CONFIGURATION }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed.CommandLine\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   api:
     runs-on: windows-2025-vs2026
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
+        project: [Elapsed]
+        targetFramework: [netstandard2.1]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -198,30 +205,33 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:API_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.Elapsed_${{ env.CONFIGURATION }}'
-          path: '${{ github.workspace }}\bin\Riverside.Elapsed\${{ env.CONFIGURATION }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.Elapsed\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   tus:
     runs-on: windows-2025-vs2026
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        configuration: [Preview, Release]
+        configuration: [Debug, Release]
+        project: [ResumableUploads]
+        targetFramework: [netstandard2.1]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
 
     steps:
       - name: Checkout the repository
@@ -243,27 +253,78 @@ jobs:
         run: |
           msbuild $env:SOLUTION_PATH `
             -t:Restore `
-            -p:Platform="Any CPU" `
             -p:Configuration=$env:CONFIGURATION
 
       - name: Build & publish
         run: |
           msbuild $env:TUS_PROJECT_PATH `
             -t:Publish `
-            -p:Platform="Any CPU" `
-            -p:Configuration=$env:CONFIGURATION
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: 'Riverside.ResumableUploads_${{ env.CONFIGURATION }}'
-          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\${{ env.CONFIGURATION }}'
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.ResumableUploads\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
+
+  media:
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: true
+      matrix:
+        configuration: [Debug, Release]
+        project: [MediaRecording]
+        targetFramework: [net10.0-windows]
+    env:
+      CONFIGURATION: ${{ matrix.configuration }}
+      TFM: ${{ matrix.targetFramework }}
+      ID: runtime.any.${{ matrix.project }}.${{ matrix.targetFramework }}.Environment-${{ matrix.configuration }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Dependencies
+        uses: "./.github/install_dependencies"
+        with:
+          dotnet-version: 10.0.102
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore
+        run: |
+          msbuild $env:SOLUTION_PATH `
+            -t:Restore `
+            -p:Configuration=$env:CONFIGURATION
+
+      - name: Build & publish
+        run: |
+          msbuild $env:MEDIA_PROJECT_PATH `
+            -t:Publish `
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: '${{ env.ID }}'
+          path: '${{ github.workspace }}\bin\Riverside.MediaRecording\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
   publish-releases:
     if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
-    needs: [app, cli, api, tus]
+       github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(
+         join(github.event.commits.*.modified, ','),
+         'eng/CurrentVersion.props'
+       )
+    needs: [app, cli, api, tus, media]
     runs-on: windows-latest
     environment:
       name: GitHub Releases
@@ -276,8 +337,6 @@ jobs:
 
       - name: Download artifacts
         uses: actions/download-artifact@v8
-        with:
-          path: .\artifacts
 
       - name: Determine release mode
         id: mode
@@ -290,126 +349,26 @@ jobs:
           [xml]$versionProps = Get-Content $versionPropsPath
           $majorVersion = $versionProps.Project.PropertyGroup.MajorVersion
           $minorVersion = $versionProps.Project.PropertyGroup.MinorVersion
+          $releaseLevel = $versionProps.Project.PropertyGroup.ReleaseLevel
+          $betaVersion = $versionProps.Project.PropertyGroup.BetaVersion
           $buildDate = Get-Date -Format 'yyMMdd'
 
-          $latestTag = (git describe --tags --abbrev=0 2>$null)
-          $betaVersion = 1
-          if ($latestTag -match '-preview(\d+)$') {
-            $betaVersion = [int]$Matches[1] + 1
-          } else {
-            $minorVersion = [int]$minorVersion + 1
-          }
-
-          if ($before -eq '0000000000000000000000000000000000000000') {
-            $versionFileChanged = $false
-          }
-          else {
-            $changedFiles = git diff --name-only $before $after
-            $versionFileChanged = $changedFiles -contains 'eng/CurrentVersion.props'
-          }
-
-          if ($versionFileChanged) {
+          if ($releaseLevel -eq "final") {
             $tag = "v$majorVersion.$minorVersion.$buildDate"
-            "config=Release" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "prerelease=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "make_latest=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "channel=release" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "release_name=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            $prerelease = "false"
+            $release_name = "$majorVersion.$minorVersion"
           }
           else {
-            $tag = "v$majorVersion.$minorVersion.$buildDate-preview$betaVersion"
-            "config=Preview" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "prerelease=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "make_latest=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "channel=preview" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "release_name=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            $tag = "v$majorVersion.$minorVersion.$buildDate-$releaseLevel$betaVersion"
+            $prerelease = "true"
+            $release_name = "$majorVersion.$minorVersion-$releaseLevel$betaVersion"
           }
 
-      - name: Prepare release assets
-        id: assets
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          $selectedConfig = "${{ steps.mode.outputs.config }}"
-          $artifactsRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
-          $releaseAssetsRoot = Join-Path $env:GITHUB_WORKSPACE 'release-assets'
-
-          if (Test-Path $releaseAssetsRoot) {
-            Remove-Item $releaseAssetsRoot -Recurse -Force
-          }
-          New-Item -ItemType Directory -Path $releaseAssetsRoot | Out-Null
-
-          function New-ZipFromFolder {
-            param(
-              [Parameter(Mandatory = $true)] [string] $SourceFolder,
-              [Parameter(Mandatory = $true)] [string] $DestinationZip
-            )
-
-            if (Test-Path $DestinationZip) {
-              Remove-Item $DestinationZip -Force
-            }
-
-            Compress-Archive -Path (Join-Path $SourceFolder '*') -DestinationPath $DestinationZip -Force
-          }
-
-          $appDirs = Get-ChildItem $artifactsRoot -Directory | Where-Object {
-            $_.Name -match "^Riverside\.Elapsed\.App_${selectedConfig}_net10\.0-(Android|Desktop|iOS|BrowserWASM)$"
-          }
-
-          foreach ($dir in $appDirs) {
-            $platform = ([regex]::Match($dir.Name, 'net10\.0-([A-Za-z0-9]+)$')).Groups[1].Value.ToLowerInvariant()
-            $zipPath = Join-Path $releaseAssetsRoot "Hackclub501.Elapsed.App_net10.0-${platform}.zip"
-            New-ZipFromFolder -SourceFolder $dir.FullName -DestinationZip $zipPath
-          }
-
-          $cliDirs = Get-ChildItem $artifactsRoot -Directory | Where-Object {
-            $_.Name -match "^Riverside\.Elapsed\.CommandLine_${selectedConfig}$"
-          }
-
-          foreach ($dir in $cliDirs) {
-            $zipPath = Join-Path $releaseAssetsRoot 'Hackclub501.Elapsed.CommandLine.zip'
-            New-ZipFromFolder -SourceFolder $dir.FullName -DestinationZip $zipPath
-          }
-
-          $apiDirs = Get-ChildItem $artifactsRoot -Directory | Where-Object {
-            $_.Name -match "^Riverside\.Elapsed_${selectedConfig}$"
-          }
-
-          $tusDirs = Get-ChildItem $artifactsRoot -Directory | Where-Object {
-            $_.Name -match "^Riverside\.ResumableUploads_${selectedConfig}$"
-          }
-
-          foreach ($dir in $apiDirs) {
-            $packageFiles = Get-ChildItem $dir.FullName -File | Where-Object {
-              $_.Extension -in '.nupkg', '.snupkg'
-            }
-
-            foreach ($package in $packageFiles) {
-              $destinationName = "Hackclub501.Elapsed$($package.Extension)"
-              Copy-Item -Path $package.FullName -Destination (Join-Path $releaseAssetsRoot $destinationName) -Force
-            }
-          }
-
-          foreach ($dir in $tusDirs) {
-            $packageFiles = Get-ChildItem $dir.FullName -File | Where-Object {
-              $_.Extension -in '.nupkg', '.snupkg'
-            }
-
-            foreach ($package in $packageFiles) {
-              $destinationName = "Hackclub501.Tus$($package.Extension)"
-              Copy-Item -Path $package.FullName -Destination (Join-Path $releaseAssetsRoot $destinationName) -Force
-            }
-          }
-
-          $preparedAssets = Get-ChildItem $releaseAssetsRoot -File
-          if ($preparedAssets.Count -eq 0) {
-            throw "No release assets were prepared for configuration '$selectedConfig'."
-          }
-
-          "path=$releaseAssetsRoot" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "prerelease=$prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "make_latest=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "channel=release" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "release_name=$release_name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Draft release
         uses: softprops/action-gh-release@v2
@@ -421,22 +380,32 @@ jobs:
           token: ${{ secrets.USER_TOKEN }}
           prerelease: ${{ steps.mode.outputs.prerelease }}
           files: |
-            ${{ steps.assets.outputs.path }}\*
+            runtime.*.Environment-Release\*
 
   publish-nuget:
     if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
-    needs: [cli, api, tus]
+       github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(
+         join(github.event.commits.*.modified, ','),
+         'eng/CurrentVersion.props'
+       )
+    needs: [cli, api, tus, media]
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        product: [CLI, API, ResumableUploads]
+        product: [CommandLine, ResumableUploads, MediaRecording, Elapsed]
     environment:
       name: NuGet
     env:
       PRODUCT: ${{ matrix.product }}
+      ID_CLI: runtime.any.CommandLine.net10.0.Environment-Release
+      ID_TUS: runtime.any.ResumableUploads.netstandard2.1.Environment-Release
+      ID_MEDIA: runtime.any.MediaRecording.net10.0-windows.Environment-Release
+      ID_API: runtime.any.Elapsed.netstandard2.1.Environment-Release
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout the repository
@@ -444,65 +413,41 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Authenticate with NuGet
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Download artifacts
         uses: actions/download-artifact@v8
 
-      - name: Detect version file changes
-        id: version_file
-        shell: pwsh
-        run: |
-          $before = "${{ github.event.before }}"
-          $after = "${{ github.sha }}"
-
-          if ($before -eq '0000000000000000000000000000000000000000') {
-            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            exit 0
-          }
-
-          $changedFiles = git diff --name-only $before $after
-          if ($changedFiles -contains 'eng/CurrentVersion.props') {
-            "changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
-          else {
-            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
-
       - name: Publish release to NuGet
-        if: |
-          steps.version_file.outputs.changed == 'true'
         id: nuget_release
         shell: pwsh
         run: |
-          if ($env:PRODUCT -eq "CLI") {
-            $artifact=".\Riverside.Elapsed.CommandLine_Release\*.nupkg"
+          if ($env:PRODUCT -eq "CommandLine") {
+            $artifact=".\${{ env.ID_CLI }}\*.nupkg"
           }
           elseif ($env:PRODUCT -eq "ResumableUploads") {
-            $artifact=".\Riverside.ResumableUploads_Release\*.nupkg"
-          }
-          else {
-            $artifact=".\Riverside.Elapsed_Release\*.nupkg"
-          }
-          dotnet nuget push $artifact --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-
-      - name: Publish preview to NuGet
-        if: steps.version_file.outputs.changed != 'true'
-        shell: pwsh
-        run: |
-          if ($env:PRODUCT -eq "CLI") {
-            $artifact=".\Riverside.Elapsed.CommandLine_Preview\*.nupkg"
+            $artifact=".\${{ env.ID_TUS }}\*.nupkg"
           }
           elseif ($env:PRODUCT -eq "ResumableUploads") {
-            $artifact=".\Riverside.ResumableUploads_Preview\*.nupkg"
+            $artifact=".\${{ env.ID_MEDIA }}\*.nupkg"
           }
           else {
-            $artifact=".\Riverside.Elapsed_Preview\*.nupkg"
+            $artifact=".\${{ env.ID_API }}\*.nupkg"
           }
-          dotnet nuget push $artifact --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+          dotnet nuget push $artifact --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
   publish-web:
     if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
+       github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(
+         join(github.event.commits.*.modified, ','),
+         'eng/CurrentVersion.props'
+       )
     needs: [app]
     runs-on: windows-latest
     environment:
@@ -510,6 +455,7 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      ID: runtime.any.App.net10.0-browserwasm.Environment-Release
 
     steps:
       - name: Checkout the repository
@@ -522,46 +468,17 @@ jobs:
 
       - name: Download artifacts
         uses: actions/download-artifact@v8
-
-      - name: Detect version file changes
-        id: version_file
-        shell: pwsh
-        run: |
-          $before = "${{ github.event.before }}"
-          $after = "${{ github.sha }}"
-
-          if ($before -eq '0000000000000000000000000000000000000000') {
-            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            exit 0
-          }
-
-          $changedFiles = git diff --name-only $before $after
-          if ($changedFiles -contains 'eng/CurrentVersion.props') {
-            "changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
-          else {
-            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
+        with:
+          name: ${{ env.ID }}
+          path: ${{ github.workspace }}\elapsed
 
       - name: Publish release to web
-        if: |
-          steps.version_file.outputs.changed == 'true'
-        id: web_release
         shell: pwsh
         run: |
-          cd ".\Riverside.Elapsed.App_Release_net10.0-browserwasm"
+          cd ".\elapsed"
           vercel pull --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --yes --target=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --yes --prebuilt --target=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Publish preview to web
-        if: steps.version_file.outputs.changed != 'true'
-        shell: pwsh
-        run: |
-          cd ".\Riverside.Elapsed.App_Preview_net10.0-browserwasm"
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --yes --target=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --yes --prebuilt --target=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --yes --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
 #  publish-marketplaces:
 #    if: |

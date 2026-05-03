@@ -20,6 +20,10 @@ charset = utf-8
 # See https://github.com/dotnet/roslyn/issues/20356#issuecomment-310143926
 trim_trailing_whitespace = false
 
+[*.yml]
+indent_style = tab
+indent_size = 2
+
 # Sort using and Import directives with System.* appearing first
 dotnet_sort_system_directives_first = true
 
@@ -29,7 +33,7 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
 
-#### Naming styles ####
+#### Naming styles
 
 # Naming rules
 

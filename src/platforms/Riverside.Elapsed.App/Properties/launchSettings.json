@@ -27,7 +27,6 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-	/*
     "Windows App SDK (Unpackaged)": {
       "commandName": "Project",
       "compatibleTargetFramework": "windows"
@@ -36,14 +35,13 @@
       "commandName": "MsixPackage",
       "compatibleTargetFramework": "windows"
     },
-	*/
     "Desktop": {
       "commandName": "Project",
       "compatibleTargetFramework": "desktop"
     },
     "Desktop (WSL2)": {
       "commandName": "WSL2",
-      "commandLineArgs": "{ProjectDir}/bin/Preview/net10.0-desktop/Riverside.Elapsed.App.dll",
+      "commandLineArgs": "{ProjectDir}/bin/Debug/net10.0-desktop/Riverside.Elapsed.App.dll",
       "distributionName": "",
       "compatibleTargetFramework": "desktop"
     }
