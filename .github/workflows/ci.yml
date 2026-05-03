@@ -324,7 +324,7 @@ jobs:
          join(github.event.commits.*.modified, ','),
          'eng/CurrentVersion.props'
        )
-    needs: [app, cli, api, tus]
+    needs: [app, cli, api, tus, media]
     runs-on: windows-latest
     environment:
       name: GitHub Releases
