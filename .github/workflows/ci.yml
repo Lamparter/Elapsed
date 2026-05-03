@@ -445,7 +445,7 @@ jobs:
        github.event_name == 'push' &&
        github.ref == 'refs/heads/main' &&
        contains(
-         join(github.event.commits.*.modified, ','),
+         join(github.event.head_commit.modified, ','),
          'eng/CurrentVersion.props'
        )
     needs: [app]
