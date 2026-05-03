@@ -1,4 +1,4 @@
-<Project InitialTargets="GetLatestGitTag">
+<Project>
 	<Import Project="$(MSBuildThisFileDirectory)\eng\AdditionalFiles.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\CurrentVersion.props" />
 	<Import Project="$(MSBuildThisFileDirectory)\eng\PackageMetadata.props" />
@@ -29,13 +29,13 @@
 	
 	<!-- Directories -->
 	<PropertyGroup>
-		<RootDirectory Condition=" '$(RootDirectory)' == '' ">$(MSBuildThisFileDirectory)</RootDirectory>
-		<SourceDirectory Condition=" '$(SourceDirectory)' == '' ">$(MSBuildThisFileDirectory)src</SourceDirectory>
-		<BuildDirectory Condition=" '$(BuildDirectory)' == '' ">$(RootDirectory)eng</BuildDirectory>
-		<RepositoryFilesDirectory Condition=" '$(RepositoryFilesDirectory)' == '' ">$(RootDirectory).github</RepositoryFilesDirectory>
+		<RootDirectory Condition="'$(RootDirectory)' == ''">$(MSBuildThisFileDirectory)</RootDirectory>
+		<SourceDirectory Condition="'$(SourceDirectory)' == ''">$(MSBuildThisFileDirectory)src</SourceDirectory>
+		<BuildDirectory Condition="'$(BuildDirectory)' == ''">$(RootDirectory)eng</BuildDirectory>
+		<RepositoryFilesDirectory Condition="'$(RepositoryFilesDirectory)' == ''">$(RootDirectory).github</RepositoryFilesDirectory>
 
-		<AppDirectory Condition=" '$(AppDirectory)' == '' ">$(SourceDirectory)\platforms</AppDirectory>
-		<SharedDirectory Condition=" '$(SharedDirectory)' == '' ">$(SourceDirectory)\core</SharedDirectory>
+		<AppDirectory Condition="'$(AppDirectory)' == ''">$(SourceDirectory)\platforms</AppDirectory>
+		<SharedDirectory Condition="'$(SharedDirectory)' == ''">$(SourceDirectory)\core</SharedDirectory>
 
 		<!-- The WASM binary output directory must be relative due to a bug in the SDK, see https://github.com/unoplatform/Uno.Wasm.Bootstrap/issues/1058 -->
 		<CIOutputDirectory>$(RootDirectory)bin\$(MSBuildProjectName)\$(Platform)\$(Configuration)\$(TargetFramework)\</CIOutputDirectory>
@@ -47,52 +47,33 @@
 	</PropertyGroup>
 
 	<!-- Versioning (defined at build) -->
-	<Target Name="GetLatestGitTag" Condition="'$(_LatestGitTag)' == ''">
-		<Exec Command="git describe --tags --abbrev=0" ConsoleToMSBuild="true" IgnoreExitCode="true">
-			<Output TaskParameter="ConsoleOutput" PropertyName="_LatestGitTag" />
-		</Exec>
-		<PropertyGroup>
-			<_LatestGitTag>$(_LatestGitTag.Trim())</_LatestGitTag>
-			<_BetaMatch>$([System.Text.RegularExpressions.Regex]::Match('$(_LatestGitTag)', '-preview(\d+)$').Groups[1].Value)</_BetaMatch>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' == ''">
-			<BetaVersion>1</BetaVersion>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(BetaVersion)' == '' and '$(_BetaMatch)' != ''">
-			<BetaVersion>$([MSBuild]::Add($(_BetaMatch), 1))</BetaVersion>
-		</PropertyGroup>
-		<PropertyGroup>
-			<MinorVersion Condition="'$(Configuration)' == 'Debug'">$([MSBuild]::Add($(MinorVersion), 1))</MinorVersion>
+	<PropertyGroup>
+		<Product>Elapsed</Product>
+		<Company>Hack Club</Company>
 
-			<Product>Elapsed</Product>
-			<Company>Hack Club</Company>
+		<ReleaseLevel Condition="'$(Configuration)' == 'Debug'">preview</ReleaseLevel>
+		<BetaVersion Condition="'$(BetaVersion)' == '' and '$(Configuration)' == 'Debug'">1</BetaVersion>
+		<BetaVersion Condition="'$(BetaVersion)' == '' and '$(Configuration)' != 'Debug'">0</BetaVersion>
 
-			<ReleaseLevel>final</ReleaseLevel>
-			<ReleaseLevel Condition="'$(Configuration)' == 'Debug'">preview</ReleaseLevel>
-			<_LatestGitTag></_LatestGitTag>
-			<_BetaMatch></_BetaMatch>
+		<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
+		<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
+		<CurrentDay>$([System.DateTime]::Now.ToString("dd"))</CurrentDay>
+		<BuildDate>$(CurrentYear)$(CurrentMonth)$(CurrentDay)</BuildDate>
 
-			<CurrentYear>$([System.DateTime]::Now.ToString("yy"))</CurrentYear>
-			<CurrentMonth>$([System.DateTime]::Now.ToString("MM"))</CurrentMonth>
-			<CurrentDay>$([System.DateTime]::Now.ToString("dd"))</CurrentDay>
-			<BuildDate>$(CurrentYear)$(CurrentMonth)$(CurrentDay)</BuildDate>
+		<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
+		<BaseDisplayVersion>$(AssemblyVersion).$(BuildDate)</BaseDisplayVersion>
 
-			<AssemblyVersion>$(MajorVersion).$(MinorVersion)</AssemblyVersion>
-			<!--<InformationalVersion>$(Product), Version=$(MajorVersion).$(MinorVersion), Channel=$(ReleaseLevel), Build=$(BuildDate)</InformationalVersion>-->
-			<BaseDisplayVersion>$(AssemblyVersion).$(BuildDate)</BaseDisplayVersion>
+		<ApplicationTitle>$(Product)</ApplicationTitle>
+		<ApplicationId>$(MSBuildProjectName)</ApplicationId>
+		<ApplicationDisplayVersion>$(AssemblyVersion).$(BetaVersion)</ApplicationDisplayVersion>
+		<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
+		<ApplicationPublisher>$(Company)</ApplicationPublisher>
 
-			<ApplicationTitle>$(Product)</ApplicationTitle>
-			<ApplicationId>$(MSBuildProjectName)</ApplicationId>
-			<ApplicationDisplayVersion>$(AssemblyVersion).0</ApplicationDisplayVersion>
-			<!--<ApplicationVersion>$(AssemblyVersion).0</ApplicationVersion>-->
-			<ApplicationPublisher>$(Company)</ApplicationPublisher>
-
-			<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
-			<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(BaseDisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
-			<Version>$(DisplayVersion)</Version>
-			<PackageVersion>$(DisplayVersion)</PackageVersion>
-		</PropertyGroup>
-	</Target>
+		<DisplayVersion>$(BaseDisplayVersion)</DisplayVersion>
+		<DisplayVersion Condition="'$(ReleaseLevel)' != 'final'">$(BaseDisplayVersion)-$(ReleaseLevel)$(BetaVersion)</DisplayVersion>
+		<Version>$(DisplayVersion)</Version>
+		<PackageVersion>$(DisplayVersion)</PackageVersion>
+	</PropertyGroup>
 
 	<!-- Deterministic build -->
 	<PropertyGroup Condition="'$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true'">

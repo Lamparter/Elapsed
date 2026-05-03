@@ -316,6 +316,186 @@ jobs:
           name: '${{ env.ID }}'
           path: '${{ github.workspace }}\bin\Riverside.MediaRecording\AnyCPU\${{ env.CONFIGURATION }}\${{ env.TFM }}'
 
+  publish-releases:
+    if: |
+       github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(
+         join(github.event.commits.*.modified, ','),
+         'eng/CurrentVersion.props'
+       )
+    needs: [app, cli, api, tus]
+    runs-on: windows-latest
+    environment:
+      name: GitHub Releases
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+
+      - name: Determine release mode
+        id: mode
+        shell: pwsh
+        run: |
+          $before = "${{ github.event.before }}"
+          $after = "${{ github.sha }}"
+          $versionPropsPath = Join-Path $env:GITHUB_WORKSPACE 'eng\CurrentVersion.props'
+
+          [xml]$versionProps = Get-Content $versionPropsPath
+          $majorVersion = $versionProps.Project.PropertyGroup.MajorVersion
+          $minorVersion = $versionProps.Project.PropertyGroup.MinorVersion
+          $releaseLevel = $versionProps.Project.PropertyGroup.ReleaseLevel
+          $betaVersion = $versionProps.Project.PropertyGroup.BetaVersion
+          $buildDate = Get-Date -Format 'yyMMdd'
+
+          if ($releaseLevel -eq "final") {
+            $tag = "v$majorVersion.$minorVersion.$buildDate"
+            $prerelease = "false"
+            $release_name = "$majorVersion.$minorVersion"
+          }
+          else {
+            $tag = "v$majorVersion.$minorVersion.$buildDate-$releaseLevel$betaVersion"
+            $prerelease = "true"
+            $release_name = "$majorVersion.$minorVersion-$releaseLevel$betaVersion"
+          }
+
+          "prerelease=$prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "make_latest=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "channel=release" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "release_name=$release_name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.mode.outputs.tag }}
+          name: ${{ steps.mode.outputs.release_name }}
+          draft: true
+          make_latest: ${{ steps.mode.outputs.make_latest }}
+          token: ${{ secrets.USER_TOKEN }}
+          prerelease: ${{ steps.mode.outputs.prerelease }}
+          files: |
+            runtime.*.Environment-Release\*
+
+  publish-nuget:
+    if: |
+       github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(
+         join(github.event.commits.*.modified, ','),
+         'eng/CurrentVersion.props'
+       )
+    needs: [cli, api, tus, media]
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        product: [CommandLine, ResumableUploads, MediaRecording, Elapsed]
+    environment:
+      name: NuGet
+    env:
+      PRODUCT: ${{ matrix.product }}
+      ID_CLI: runtime.any.CommandLine.net10.0.Environment-Release
+      ID_TUS: runtime.any.ResumableUploads.netstandard2.1.Environment-Release
+      ID_MEDIA: runtime.any.MediaRecording.net10.0-windows.Environment-Release
+      ID_API: runtime.any.Elapsed.netstandard2.1.Environment-Release
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate with NuGet
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+
+      - name: Publish release to NuGet
+        id: nuget_release
+        shell: pwsh
+        run: |
+          if ($env:PRODUCT -eq "CommandLine") {
+            $artifact=".\${{ env.ID_CLI }}\*.nupkg"
+          }
+          elseif ($env:PRODUCT -eq "ResumableUploads") {
+            $artifact=".\${{ env.ID_TUS }}\*.nupkg"
+          }
+          elseif ($env:PRODUCT -eq "ResumableUploads") {
+            $artifact=".\${{ env.ID_MEDIA }}\*.nupkg"
+          }
+          else {
+            $artifact=".\${{ env.ID_API }}\*.nupkg"
+          }
+          dotnet nuget push $artifact --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+  publish-web:
+    if: |
+       github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(
+         join(github.event.commits.*.modified, ','),
+         'eng/CurrentVersion.props'
+       )
+    needs: [app]
+    runs-on: windows-latest
+    environment:
+      name: Web
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      ID: runtime.any.App.net10.0-browserwasm.Environment-Release
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.ID }}
+          path: ${{ github.workspace }}\elapsed
+
+      - name: Publish release to web
+        shell: pwsh
+        run: |
+          cd ".\elapsed"
+          vercel pull --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --yes --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+#  publish-marketplaces:
+#    if: |
+#      github.event_name == 'push' &&
+#      github.ref == 'refs/heads/main' &&
+#      contains(
+#        join(github.event.commits.*.modified, ','),
+#        'eng/CurrentVersion.props'
+#      )
+#    needs: [app, cli, api]
+#    runs-on: windows-latest
+#    strategy:
+#      matrix:
+#        marketplace: ['Microsoft Store', 'Play Store']
+#    environment:
+#      name: ${{ matrix.marketplace }}
+
 #  test:
 #    name: Unit Tests
 #    runs-on: windows-latest
