@@ -321,7 +321,7 @@ jobs:
        github.event_name == 'push' &&
        github.ref == 'refs/heads/main' &&
        contains(
-         join(github.event.commits.*.modified, ','),
+         join(github.event.head_commit.modified, ','),
          'eng/CurrentVersion.props'
        )
     needs: [app, cli, api, tus, media]
@@ -338,7 +338,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v8
 
-      - name: Determine release mode
+      - name: Determine release version
         id: mode
         shell: pwsh
         run: |
@@ -387,7 +387,7 @@ jobs:
        github.event_name == 'push' &&
        github.ref == 'refs/heads/main' &&
        contains(
-         join(github.event.commits.*.modified, ','),
+         join(github.event.head_commit.modified, ','),
          'eng/CurrentVersion.props'
        )
     needs: [cli, api, tus, media]
@@ -432,7 +432,7 @@ jobs:
           elseif ($env:PRODUCT -eq "ResumableUploads") {
             $artifact=".\${{ env.ID_TUS }}\*.nupkg"
           }
-          elseif ($env:PRODUCT -eq "ResumableUploads") {
+          elseif ($env:PRODUCT -eq "MediaRecording") {
             $artifact=".\${{ env.ID_MEDIA }}\*.nupkg"
           }
           else {
@@ -485,7 +485,7 @@ jobs:
 #      github.event_name == 'push' &&
 #      github.ref == 'refs/heads/main' &&
 #      contains(
-#        join(github.event.commits.*.modified, ','),
+#        join(github.event.head_commit.modified, ','),
 #        'eng/CurrentVersion.props'
 #      )
 #    needs: [app, cli, api]
