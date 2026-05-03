@@ -9,15 +9,21 @@
 >
 > If you are a Hack Club member and are interested in contributing, please reach out via the [`#elapsed`](https://hackclub.enterprise.slack.com/archives/C0AKTBFM0BU) channel on the Hack Club Slack!
 
-<!--
-<p align="left">
-	<img src="https://raw.githubusercontent.com/Lamparter/Elapsed/main/eng/PackageLogo.png" alt="Elapsed Logo" width="72" />
+<p align="center">
+	<img src=".github/assets/Header.png" alt="Elapsed banner" />
 </p>
--->
 
-<h1>Elapsed</h1>
-
-<h4>Elapsed is Hack Club's new timelapse tracking tool and media sharing platform.</h4>
+<p align="center">
+	<a href="https://elapsed.hackclub.com">
+		<img src=".github/assets/Source_Web.svg" alt="Find it on the Web" height="64" />
+	</a>
+	<a href="https://github.com/Lamparter/Elapsed/releases/latest">
+		<img src=".github/assets/Source_GitHub.svg" alt="Get it from GitHub" height="64" />
+	</a>
+	<a href="https://nuget.org/packages/Riverside.Elapsed.CommandLine">
+		<img src=".github/assets/Source_NuGet.svg" alt="Get it from NuGet" height="64" />
+	</a>
+</p>
 
 ---
 
@@ -31,18 +37,6 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 ---
 
 ## Using Elapsed
-
-<p align="left">
-	<a href="https://elapsed.hackclub.com">
-		<img src=".github/assets/Source_Web.svg" alt="Find it on the Web" height="64" />
-	</a>
-	<a href="https://github.com/Lamparter/Elapsed/releases/latest">
-		<img src=".github/assets/Source_GitHub.svg" alt="Get it from GitHub" height="64" />
-	</a>
-	<a href="https://nuget.org/packages/Riverside.Elapsed.CommandLine">
-		<img src=".github/assets/Source_NuGet.svg" alt="Get it from NuGet" height="64" />
-	</a>
-</p>
 
 ### Building from source
 
@@ -361,6 +355,10 @@ There are no plans to make Elapsed a paid app.
 Please contact `@Lamparter` on Slack if you have legal questions.
 
 ---
+
+<p align="center">
+	<img src=".github/assets/Showcase.png" alt="Elapsed banner" />
+</p>
 
 <p align="center">
 	<sub>Made with &lt;3 by teenagers, for teenagers. <a href="https://hackclub.com">Learn more about Hack Club.</a></sub>
