@@ -14,7 +14,7 @@ GUIDE TO VERSIONING PRACTICES:
 <Project>
 	<PropertyGroup>
 		<MajorVersion>0</MajorVersion>
-		<MinorVersion>3</MinorVersion>
+		<MinorVersion>4</MinorVersion>
 		<ReleaseLevel>final</ReleaseLevel>
 		<BetaVersion Condition="'$(ReleaseLevel)' != 'final'">0</BetaVersion>
 	</PropertyGroup>
