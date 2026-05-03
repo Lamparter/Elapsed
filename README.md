@@ -299,10 +299,6 @@ The CD workflow deploys to the following marketplaces:
 - ~~Google Play Store~~
 - ~~Apple App Store~~
 
-Preview versions are only ever published to GitHub releases and NuGet.
-The preview version number (the number 1 in `0.0.000000-preview1`) is calculated automatically as a part of the build process, based on what the previous release version was.
-For example, if there is an existing preview with preview version 2, creating a new preview release will have the preview version value of 3.
-
 #### Trimming and native AOT compilation
 
 > [!NOTE]
