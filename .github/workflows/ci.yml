@@ -366,6 +366,8 @@ jobs:
 
       - name: Download artifacts
         uses: actions/download-artifact@v8
+        with:
+          skip-decompress: true
 
       - name: Determine release version
         id: mode
@@ -407,7 +409,7 @@ jobs:
           token: ${{ secrets.USER_TOKEN }}
           prerelease: ${{ steps.mode.outputs.prerelease }}
           files: |
-            runtime.*.Environment-Release\*
+            runtime.*.Environment-Release*
 
   publish-nuget:
     if: |
