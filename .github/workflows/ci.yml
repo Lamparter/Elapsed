@@ -409,7 +409,7 @@ jobs:
           token: ${{ secrets.USER_TOKEN }}
           prerelease: ${{ steps.mode.outputs.prerelease }}
           files: |
-            runtime.*.Environment-Release*
+            runtime.*.Environment-Release\runtime.*.Environment-Release*
 
   publish-nuget:
     if: |
