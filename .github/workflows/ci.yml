@@ -300,7 +300,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
         project: [MediaRecording]
-        targetFramework: [net10.0-windows]
+        targetFramework: [net10.0]
     env:
       CONFIGURATION: ${{ matrix.configuration }}
       TFM: ${{ matrix.targetFramework }}
@@ -332,6 +332,13 @@ jobs:
         run: |
           msbuild $env:MEDIA_PROJECT_PATH `
             -t:Publish `
+            -p:Configuration=$env:CONFIGURATION `
+            -p:TargetFramework=$env:TFM
+
+      - name: Pack library
+        run: |
+          msbuild $env:MEDIA_PROJECT_PATH `
+            -t:Pack `
             -p:Configuration=$env:CONFIGURATION `
             -p:TargetFramework=$env:TFM
 
@@ -419,7 +426,7 @@ jobs:
       PRODUCT: ${{ matrix.product }}
       ID_CLI: runtime.any.CommandLine.net10.0.Environment-Release
       ID_TUS: runtime.any.ResumableUploads.netstandard2.1.Environment-Release
-      ID_MEDIA: runtime.any.MediaRecording.net10.0-windows.Environment-Release
+      ID_MEDIA: runtime.any.MediaRecording.net10.0.Environment-Release
       ID_API: runtime.any.Elapsed.netstandard2.1.Environment-Release
     permissions:
       id-token: write
