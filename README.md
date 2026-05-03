@@ -33,7 +33,7 @@ The CLI exposes the **full Lapse API** surface, returns **clean JSON output**, a
 ## Using Elapsed
 
 <p align="left">
-	<a href="https://elapsed.dino.icu">
+	<a href="https://elapsed.hackclub.com">
 		<img src=".github/assets/Source_Web.svg" alt="Find it on the Web" height="64" />
 	</a>
 	<a href="https://github.com/Lamparter/Elapsed/releases/latest">
