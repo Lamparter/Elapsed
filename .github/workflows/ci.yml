@@ -18,6 +18,31 @@ env:
   MEDIA_PROJECT_PATH: '${{ github.workspace }}\src\core\Riverside.MediaRecording\Riverside.MediaRecording.csproj'
 
 jobs:
+  evaluate:
+    runs-on: windows-2025-vs2026
+    outputs:
+      version_bumped: ${{ steps.detect.outputs.version_props_changed }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect versioning bump
+        id: detect
+        shell: pwsh
+        run: |
+          $before = "${{ github.event.before }}"
+          $after  = "${{ github.sha }}"
+
+          if ($before -match '^0+$') {
+            $changed = git show --name-only --pretty="" $after | Select-String -SimpleMatch "eng/CurrentVersion.props"
+          } else {
+            $changed = git diff --name-only $before $after | Select-String -SimpleMatch "eng/CurrentVersion.props"
+          }
+
+          $flag = if ($changed) { "true" } else { "false" }
+          "version_props_changed=$flag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
   formatting:
     runs-on: windows-2025-vs2026
 
@@ -318,13 +343,10 @@ jobs:
 
   publish-releases:
     if: |
-       github.event_name == 'push' &&
-       github.ref == 'refs/heads/main' &&
-       contains(
-         join(github.event.head_commit.modified, ','),
-         'eng/CurrentVersion.props'
-       )
-    needs: [app, cli, api, tus, media]
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.evaluate.outputs.version_bumped == 'true'
+    needs: [evaluate, app, cli, api, tus, media]
     runs-on: windows-latest
     environment:
       name: GitHub Releases
@@ -342,8 +364,6 @@ jobs:
         id: mode
         shell: pwsh
         run: |
-          $before = "${{ github.event.before }}"
-          $after = "${{ github.sha }}"
           $versionPropsPath = Join-Path $env:GITHUB_WORKSPACE 'eng\CurrentVersion.props'
 
           [xml]$versionProps = Get-Content $versionPropsPath
@@ -384,13 +404,10 @@ jobs:
 
   publish-nuget:
     if: |
-       github.event_name == 'push' &&
-       github.ref == 'refs/heads/main' &&
-       contains(
-         join(github.event.head_commit.modified, ','),
-         'eng/CurrentVersion.props'
-       )
-    needs: [cli, api, tus, media]
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.evaluate.outputs.version_bumped == 'true'
+    needs: [evaluate, cli, api, tus, media]
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -442,13 +459,10 @@ jobs:
 
   publish-web:
     if: |
-       github.event_name == 'push' &&
-       github.ref == 'refs/heads/main' &&
-       contains(
-         join(github.event.head_commit.modified, ','),
-         'eng/CurrentVersion.props'
-       )
-    needs: [app]
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.evaluate.outputs.version_bumped == 'true'
+    needs: [evaluate, app]
     runs-on: windows-latest
     environment:
       name: Web

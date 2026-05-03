@@ -16,6 +16,6 @@ GUIDE TO VERSIONING PRACTICES:
 		<MajorVersion>0</MajorVersion>
 		<MinorVersion>3</MinorVersion>
 		<ReleaseLevel>final</ReleaseLevel>
-		<BetaVersion Condition="'$(ReleaseLevel)' != 'final'">1</BetaVersion>
+		<BetaVersion Condition="'$(ReleaseLevel)' != 'final'">0</BetaVersion>
 	</PropertyGroup>
 </Project>
