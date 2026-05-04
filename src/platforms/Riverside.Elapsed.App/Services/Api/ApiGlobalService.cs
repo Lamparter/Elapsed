@@ -20,16 +20,16 @@ public sealed class ApiGlobalService(IApiClientFacade client) : IApiGlobalServic
 		return ApiResult<IReadOnlyList<LeaderboardEntry>>.Failure(error);
 	}
 
-	public async Task<ApiResult<IReadOnlyList<Timelapse>>> GetRecentTimelapsesAsync(CancellationToken cancellationToken = default)
+	public async Task<ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Timelapses.Timelapse>>> GetRecentTimelapsesAsync(CancellationToken cancellationToken = default)
 	{
 		var response = await client.SendAsync(x => x.Global.RecentTimelapses.GetAsRecentTimelapsesGetResponseAsync(cancellationToken: cancellationToken), cancellationToken);
 		if (response?.RecentTimelapsesGetResponseMember1?.Data?.Timelapses is { } timelapses)
 		{
-			return ApiResult<IReadOnlyList<Timelapse>>.Success(timelapses.Select(ApiMappingExtensions.MapTimelapse).ToArray());
+			return ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Timelapses.Timelapse>>.Success(timelapses.Select(ApiMappingExtensions.MapTimelapse).ToArray());
 		}
 
 		var error = response?.RecentTimelapsesGetResponseMember2?.Message ?? "Failed to load timelapses.";
-		return ApiResult<IReadOnlyList<Timelapse>>.Failure(error);
+		return ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Timelapses.Timelapse>>.Failure(error);
 	}
 
 	public async Task<ApiResult<ActiveUsers>> GetActiveUsersAsync(CancellationToken cancellationToken = default)

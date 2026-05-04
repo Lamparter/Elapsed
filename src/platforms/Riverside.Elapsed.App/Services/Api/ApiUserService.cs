@@ -45,9 +45,13 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 			};
 		}, cancellationToken), cancellationToken);
 
-		if (response?.QueryGetResponseMember1?.Data?.User?.QueryGetResponseMember1DataUserMember1 is { } user)
+		if (response?.QueryGetResponseMember1?.Data?.User is { } user)
 		{
-			return ApiResult<UserDetails>.Success(ApiMappingExtensions.MapUserDetails(user));
+			var mapped = ApiMappingExtensions.MapUserDetails(user);
+			if (mapped is not null)
+			{
+				return ApiResult<UserDetails>.Success(mapped);
+			}
 		}
 
 		var error = response?.QueryGetResponseMember2?.Message ?? "Failed to query user profile.";
@@ -64,7 +68,7 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 			};
 		}, cancellationToken), cancellationToken);
 
-		if (response?.QueryByEmailGetResponseMember1?.Data?.User is { } user)
+		if (response?.QueryByEmailGetResponseMember1?.Data?.User?.QueryByEmailGetResponseMember1DataUserMember1 is { } user)
 		{
 			return ApiResult<UserDetails>.Success(ApiMappingExtensions.MapUserDetails(user));
 		}
@@ -99,13 +103,13 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 
 	public async Task<ApiResult<IReadOnlyList<Device>>> GetDevicesAsync(CancellationToken cancellationToken = default)
 	{
-		var response = await client.SendAsync(x => x.User.GetDevices.GetAsGetDevicesPostResponseAsync(cancellationToken: cancellationToken), cancellationToken);
-		if (response?.GetDevicesPostResponseMember1?.Data?.Devices is { } devices)
+		var response = await client.SendAsync(x => x.User.GetDevices.GetAsGetDevicesGetResponseAsync(cancellationToken: cancellationToken), cancellationToken);
+		if (response?.GetDevicesGetResponseMember1?.Data?.Devices is { } devices)
 		{
 			return ApiResult<IReadOnlyList<Device>>.Success(devices.Select(ApiMappingExtensions.MapDevice).ToArray());
 		}
 
-		var error = response?.GetDevicesPostResponseMember2?.Message ?? "Failed to load devices.";
+		var error = response?.GetDevicesGetResponseMember2?.Message ?? "Failed to load devices.";
 		return ApiResult<IReadOnlyList<Device>>.Failure(error);
 	}
 
@@ -144,16 +148,16 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 		return ApiResult<double>.Failure(error);
 	}
 
-	public async Task<ApiResult<IReadOnlyList<Models.Hackatime.HackatimeProject>>> GetHackatimeProjectsAsync(CancellationToken cancellationToken = default)
+	public async Task<ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Hackatime.HackatimeProject>>> GetHackatimeProjectsAsync(CancellationToken cancellationToken = default)
 	{
 		var response = await client.SendAsync(x => x.User.HackatimeProjects.GetAsHackatimeProjectsGetResponseAsync(cancellationToken: cancellationToken), cancellationToken);
 		if (response?.HackatimeProjectsGetResponseMember1?.Data?.Projects is { } projects)
 		{
-			return ApiResult<IReadOnlyList<Models.Hackatime.HackatimeProject>>.Success(projects.Select(ApiMappingExtensions.MapHackatimeProject).ToArray());
+			return ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Hackatime.HackatimeProject>>.Success(projects.Select(ApiMappingExtensions.MapHackatimeProject).ToArray());
 		}
 
 		var error = response?.HackatimeProjectsGetResponseMember2?.Message ?? "Failed to load Hackatime projects.";
-		return ApiResult<IReadOnlyList<Models.Hackatime.HackatimeProject>>.Failure(error);
+		return ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Hackatime.HackatimeProject>>.Failure(error);
 	}
 
 	public async Task<ApiResult<KeyRelayRequest?>> QueryKeyRelayRequestAsync(Guid callingDevice, CancellationToken cancellationToken = default)
@@ -166,12 +170,12 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 			};
 		}, cancellationToken), cancellationToken);
 
-		if (response?.QueryKeyRelayRequestGetResponseMember1?.Data?.Request is { } relayRequest)
+		if (response?.QueryKeyRelayRequestGetResponseMember1?.Data?.Request?.QueryKeyRelayRequestGetResponseMember1DataRequestMember1 is { } relayRequest)
 		{
 			return ApiResult<KeyRelayRequest?>.Success(new KeyRelayRequest
 			{
-				ExchangeId = Guid.TryParse(relayRequest.ExchangeId, out var exchangeId) ? exchangeId : Guid.Empty,
-				CallingDevice = Guid.TryParse(relayRequest.CallingDevice, out var device) ? device : Guid.Empty,
+				ExchangeId = relayRequest.ExchangeId ?? Guid.Empty,
+				CallingDeviceId = relayRequest.CallingDevice ?? Guid.Empty,
 			});
 		}
 
@@ -188,7 +192,7 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 
 		if (response?.RequestKeyRelayPostResponseMember1?.Data?.ExchangeId is { } exchangeId)
 		{
-			return ApiResult<Guid?>.Success(Guid.TryParse(exchangeId, out var id) ? id : null);
+			return ApiResult<Guid?>.Success(exchangeId);
 		}
 
 		var error = response?.RequestKeyRelayPostResponseMember2?.Message ?? "Failed to request key relay.";
@@ -202,12 +206,12 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 			ExchangeId = exchangeId,
 		}, cancellationToken: cancellationToken), cancellationToken);
 
-		if (response?.ReceiveKeyRelayPostResponseMember1?.Data?.Relay is { } relay)
+		if (response?.ReceiveKeyRelayPostResponseMember1?.Data?.Relay?.ReceiveKeyRelayPostResponseMember1DataRelayMember1 is { } relay)
 		{
 			return ApiResult<KeyRelayResult?>.Success(new KeyRelayResult
 			{
-				DeviceId = Guid.TryParse(relay.DeviceId, out var deviceId) ? deviceId : Guid.Empty,
-				DeviceKeyHex = relay.DeviceKey ?? string.Empty,
+				DeviceId = relay.DeviceId ?? Guid.Empty,
+				DeviceKey = Convert.FromHexString(relay.DeviceKey ?? string.Empty),
 			});
 		}
 
@@ -271,7 +275,7 @@ public sealed class ApiUserService(IApiClientFacade client) : IApiUserService
 		return ApiResult<bool>.Failure(error);
 	}
 
-	public async Task<User?> HydrateUserAsync(UserSummary? summary, CancellationToken cancellationToken = default)
+	public async Task<Riverside.Elapsed.App.Models.User.User?> HydrateUserAsync(UserSummary? summary, CancellationToken cancellationToken = default)
 	{
 		if (summary is null || string.IsNullOrWhiteSpace(summary.UserId))
 		{

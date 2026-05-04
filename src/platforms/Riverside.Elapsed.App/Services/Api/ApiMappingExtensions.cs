@@ -54,20 +54,60 @@ using Riverside.Elapsed.Developer.UpdateApp;
 using Riverside.Elapsed.Developer.RotateAppSecret;
 using Riverside.Elapsed.Developer.GetOwnedOAuthGrants;
 using Riverside.Elapsed.Developer.RevokeOAuthGrant;
+using AppComment = Riverside.Elapsed.App.Models.Timelapses.Comment;
+using AppTimelapse = Riverside.Elapsed.App.Models.Timelapses.Timelapse;
+using AppUser = Riverside.Elapsed.App.Models.User.User;
+using AppVisibility = Riverside.Elapsed.App.Models.Timelapses.Visibility;
 
 namespace Riverside.Elapsed.App.Services.Api;
 
 public static class ApiMappingExtensions
 {
+	private static readonly Uri FallbackUri = new("https://example.com", UriKind.Absolute);
+	private static readonly Uri FallbackProfileUri = new("https://example.com", UriKind.Absolute);
 
-	public static UserDetails MapUserDetails(UserMyselfGetResponseMember1_data_userMember1 user)
+	public static UserDetails MapUserDetails(MyselfGetResponseMember1_data_userMember1 user)
 		=> new()
 		{
 			UserId = user.Id ?? string.Empty,
 			CreatedAt = UnixMillisToDateTimeOffset((long?)user.CreatedAt),
 			Handle = user.Handle ?? string.Empty,
 			DisplayName = user.DisplayName ?? string.Empty,
-			ProfilePictureUrl = new Uri(user.ProfilePictureUrl ?? string.Empty, UriKind.Absolute),
+			ProfilePictureUrl = Uri.TryCreate(user.ProfilePictureUrl, UriKind.Absolute, out var profilePicture)
+				? profilePicture
+				: FallbackProfileUri,
+			Bio = user.Bio ?? string.Empty,
+			Urls = (user.Urls ?? []).Select(url => new Uri(url, UriKind.Absolute)).ToArray(),
+			HackatimeId = user.HackatimeId?.String,
+			SlackId = user.SlackId?.String,
+		};
+
+	public static UserDetails MapUserDetails(QueryByEmailGetResponseMember1_data_userMember1 user)
+		=> new()
+		{
+			UserId = user.Id ?? string.Empty,
+			CreatedAt = UnixMillisToDateTimeOffset((long?)user.CreatedAt),
+			Handle = user.Handle ?? string.Empty,
+			DisplayName = user.DisplayName ?? string.Empty,
+			ProfilePictureUrl = Uri.TryCreate(user.ProfilePictureUrl, UriKind.Absolute, out var profilePicture)
+				? profilePicture
+				: FallbackProfileUri,
+			Bio = user.Bio ?? string.Empty,
+			Urls = (user.Urls ?? []).Select(url => new Uri(url, UriKind.Absolute)).ToArray(),
+			HackatimeId = user.HackatimeId?.String,
+			SlackId = user.SlackId?.String,
+		};
+
+	public static UserDetails MapUserDetails(UpdatePatchResponseMember1_data_user user)
+		=> new()
+		{
+			UserId = user.Id ?? string.Empty,
+			CreatedAt = UnixMillisToDateTimeOffset((long?)user.CreatedAt),
+			Handle = user.Handle ?? string.Empty,
+			DisplayName = user.DisplayName ?? string.Empty,
+			ProfilePictureUrl = Uri.TryCreate(user.ProfilePictureUrl, UriKind.Absolute, out var profilePicture)
+				? profilePicture
+				: FallbackProfileUri,
 			Bio = user.Bio ?? string.Empty,
 			Urls = (user.Urls ?? []).Select(url => new Uri(url, UriKind.Absolute)).ToArray(),
 			HackatimeId = user.HackatimeId?.String,
@@ -88,7 +128,9 @@ public static class ApiMappingExtensions
 			CreatedAt = UnixMillisToDateTimeOffset(GetLong(values, "createdAt")),
 			Handle = GetString(values, "handle"),
 			DisplayName = GetString(values, "displayName"),
-			ProfilePictureUrl = new Uri(GetString(values, "profilePictureUrl"), UriKind.Absolute),
+			ProfilePictureUrl = Uri.TryCreate(GetString(values, "profilePictureUrl"), UriKind.Absolute, out var profilePicture)
+				? profilePicture
+				: FallbackProfileUri,
 			Bio = GetString(values, "bio"),
 			Urls = GetStringArray(values, "urls")
 				.Select(url => new Uri(url, UriKind.Absolute))
@@ -107,7 +149,43 @@ public static class ApiMappingExtensions
 			ProfilePictureUrl = null,
 		};
 
+	public static UserSummary MapUserSummary(GetAllAppsPostResponseMember1_data_apps_createdByMember1 createdBy)
+		=> new()
+		{
+			UserId = createdBy.Id ?? string.Empty,
+			Handle = createdBy.Handle ?? string.Empty,
+			DisplayName = createdBy.DisplayName ?? string.Empty,
+			ProfilePictureUrl = null,
+		};
+
+	public static UserSummary MapUserSummary(CreateAppPostResponseMember1_data_app_createdByMember1 createdBy)
+		=> new()
+		{
+			UserId = createdBy.Id ?? string.Empty,
+			Handle = createdBy.Handle ?? string.Empty,
+			DisplayName = createdBy.DisplayName ?? string.Empty,
+			ProfilePictureUrl = null,
+		};
+
+	public static UserSummary MapUserSummary(UpdateAppPostResponseMember1_data_app_createdByMember1 createdBy)
+		=> new()
+		{
+			UserId = createdBy.Id ?? string.Empty,
+			Handle = createdBy.Handle ?? string.Empty,
+			DisplayName = createdBy.DisplayName ?? string.Empty,
+			ProfilePictureUrl = null,
+		};
+
 	public static UserSummary MapUserSummary(ListPostResponseMember1_data_keys_createdBy createdBy)
+		=> new()
+		{
+			UserId = createdBy.Id ?? string.Empty,
+			Handle = createdBy.Handle ?? string.Empty,
+			DisplayName = createdBy.DisplayName ?? string.Empty,
+			ProfilePictureUrl = null,
+		};
+
+	public static UserSummary MapUserSummary(CreatePostResponseMember1_data_key_createdBy createdBy)
 		=> new()
 		{
 			UserId = createdBy.Id ?? string.Empty,
@@ -146,14 +224,14 @@ public static class ApiMappingExtensions
 	public static LeaderboardEntry MapLeaderboardEntry(WeeklyLeaderboardGetResponseMember1_data_leaderboard entry)
 		=> new()
 		{
-			User = new User
+			User = new AppUser
 			{
 				UserId = entry.Id ?? string.Empty,
 				Handle = entry.Handle ?? string.Empty,
 				DisplayName = entry.DisplayName ?? string.Empty,
 				ProfilePictureUrl = Uri.TryCreate(entry.Pfp, UriKind.Absolute, out var uri)
 					? uri
-					: new Uri("https://example.com", UriKind.Absolute),
+					: FallbackProfileUri,
 				Bio = string.Empty,
 				Urls = Array.Empty<Uri>(),
 				HackatimeId = null,
@@ -162,33 +240,33 @@ public static class ApiMappingExtensions
 			SecondsThisWeek = entry.SecondsThisWeek ?? 0,
 		};
 
-	public static User MapTimelapseUser(RecentTimelapsesGetResponseMember1_data_timelapses_owner owner)
+	public static AppUser MapTimelapseUser(RecentTimelapsesGetResponseMember1_data_timelapses_owner owner)
 		=> new()
 		{
 			UserId = owner.Id ?? string.Empty,
 			Handle = owner.Handle ?? string.Empty,
 			DisplayName = owner.DisplayName ?? string.Empty,
-			ProfilePictureUrl = Uri.TryCreate(owner.ProfilePictureUrl, UriKind.Absolute, out var uri) ? uri : new Uri("https://example.com", UriKind.Absolute),
+			ProfilePictureUrl = Uri.TryCreate(owner.ProfilePictureUrl, UriKind.Absolute, out var uri) ? uri : FallbackProfileUri,
 			Bio = owner.Bio ?? string.Empty,
 			Urls = (owner.Urls ?? []).Select(url => new Uri(url, UriKind.Absolute)).ToArray(),
 			HackatimeId = owner.HackatimeId?.String,
 			SlackId = owner.SlackId?.String,
 		};
 
-	public static User MapTimelapseUser(RecentTimelapsesGetResponseMember1_data_timelapses_comments_author author)
+	public static AppUser MapTimelapseUser(RecentTimelapsesGetResponseMember1_data_timelapses_comments_author author)
 		=> new()
 		{
 			UserId = author.Id ?? string.Empty,
 			Handle = author.Handle ?? string.Empty,
 			DisplayName = author.DisplayName ?? string.Empty,
-			ProfilePictureUrl = Uri.TryCreate(author.ProfilePictureUrl, UriKind.Absolute, out var uri) ? uri : new Uri("https://example.com", UriKind.Absolute),
+			ProfilePictureUrl = Uri.TryCreate(author.ProfilePictureUrl, UriKind.Absolute, out var uri) ? uri : FallbackProfileUri,
 			Bio = author.Bio ?? string.Empty,
 			Urls = (author.Urls ?? []).Select(url => new Uri(url, UriKind.Absolute)).ToArray(),
 			HackatimeId = author.HackatimeId?.String,
 			SlackId = author.SlackId?.String,
 		};
 
-	public static Comment MapComment(RecentTimelapsesGetResponseMember1_data_timelapses_comments comment)
+	public static AppComment MapComment(RecentTimelapsesGetResponseMember1_data_timelapses_comments comment)
 		=> new()
 		{
 			CommentId = comment.Id ?? string.Empty,
@@ -197,7 +275,7 @@ public static class ApiMappingExtensions
 			CreatedAt = UnixMillisToDateTimeOffset((long?)comment.CreatedAt),
 		};
 
-	public static Timelapse MapTimelapse(RecentTimelapsesGetResponseMember1_data_timelapses timelapse)
+	public static AppTimelapse MapTimelapse(RecentTimelapsesGetResponseMember1_data_timelapses timelapse)
 		=> new()
 		{
 			TimelapseId = timelapse.Id ?? string.Empty,
@@ -214,13 +292,13 @@ public static class ApiMappingExtensions
 			SourceDraftId = timelapse.Private?.SourceDraftId?.String,
 		};
 
-	public static DeveloperApp MapDeveloperApp(GetAllOwnedAppsPostResponseMember1_data_apps app, Func<UserSummary?, User?> createdByResolver)
+	public static DeveloperApp MapDeveloperApp(GetAllOwnedAppsPostResponseMember1_data_apps app, Func<UserSummary?, AppUser?> createdByResolver)
 		=> new()
 		{
 			AppId = app.Id ?? Guid.Empty,
 			Name = app.Name ?? string.Empty,
 			Description = app.Description ?? string.Empty,
-			HomepageUrl = Uri.TryCreate(app.HomepageUrl, UriKind.Absolute, out var homepage) ? homepage : new Uri("https://example.com", UriKind.Absolute),
+			HomepageUrl = Uri.TryCreate(app.HomepageUrl, UriKind.Absolute, out var homepage) ? homepage : FallbackUri,
 			IconUrl = Uri.TryCreate(app.IconUrl, UriKind.Absolute, out var icon) ? icon : null,
 			RedirectUris = (app.RedirectUris ?? []).Select(uri => new Uri(uri, UriKind.Absolute)).ToArray(),
 			Scopes = app.Scopes?.ToArray() ?? Array.Empty<string>(),
@@ -232,6 +310,66 @@ public static class ApiMappingExtensions
 			CreatedBy = createdByResolver(app.CreatedBy?.GetAllOwnedAppsPostResponseMember1DataAppsCreatedByMember1 is null
 				? null
 				: MapUserSummary(app.CreatedBy.GetAllOwnedAppsPostResponseMember1DataAppsCreatedByMember1)),
+		};
+
+	public static DeveloperApp MapDeveloperApp(GetAllAppsPostResponseMember1_data_apps app, Func<UserSummary?, AppUser?> createdByResolver)
+		=> new()
+		{
+			AppId = app.Id ?? Guid.Empty,
+			Name = app.Name ?? string.Empty,
+			Description = app.Description ?? string.Empty,
+			HomepageUrl = Uri.TryCreate(app.HomepageUrl, UriKind.Absolute, out var homepage) ? homepage : FallbackUri,
+			IconUrl = Uri.TryCreate(app.IconUrl, UriKind.Absolute, out var icon) ? icon : null,
+			RedirectUris = (app.RedirectUris ?? []).Select(uri => new Uri(uri, UriKind.Absolute)).ToArray(),
+			Scopes = app.Scopes?.ToArray() ?? Array.Empty<string>(),
+			TrustLevel = MapTrustLevel(app.TrustLevel?.ToString()),
+			ClientId = app.ClientId ?? string.Empty,
+			CreatedAt = DateTimeOffset.TryParse(app.CreatedAt, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var createdAt)
+				? createdAt
+				: DateTimeOffset.MinValue,
+			CreatedBy = createdByResolver(app.CreatedBy?.GetAllAppsPostResponseMember1DataAppsCreatedByMember1 is null
+				? null
+				: MapUserSummary(app.CreatedBy.GetAllAppsPostResponseMember1DataAppsCreatedByMember1)),
+		};
+
+	public static DeveloperApp MapDeveloperApp(CreateAppPostResponseMember1_data_app app, Func<UserSummary?, AppUser?> createdByResolver)
+		=> new()
+		{
+			AppId = app.Id ?? Guid.Empty,
+			Name = app.Name ?? string.Empty,
+			Description = app.Description ?? string.Empty,
+			HomepageUrl = Uri.TryCreate(app.HomepageUrl, UriKind.Absolute, out var homepage) ? homepage : FallbackUri,
+			IconUrl = Uri.TryCreate(app.IconUrl, UriKind.Absolute, out var icon) ? icon : null,
+			RedirectUris = (app.RedirectUris ?? []).Select(uri => new Uri(uri, UriKind.Absolute)).ToArray(),
+			Scopes = app.Scopes?.ToArray() ?? Array.Empty<string>(),
+			TrustLevel = MapTrustLevel(app.TrustLevel?.ToString()),
+			ClientId = app.ClientId ?? string.Empty,
+			CreatedAt = DateTimeOffset.TryParse(app.CreatedAt, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var createdAt)
+				? createdAt
+				: DateTimeOffset.MinValue,
+			CreatedBy = createdByResolver(app.CreatedBy?.CreateAppPostResponseMember1DataAppCreatedByMember1 is null
+				? null
+				: MapUserSummary(app.CreatedBy.CreateAppPostResponseMember1DataAppCreatedByMember1)),
+		};
+
+	public static DeveloperApp MapDeveloperApp(UpdateAppPostResponseMember1_data_app app, Func<UserSummary?, AppUser?> createdByResolver)
+		=> new()
+		{
+			AppId = app.Id ?? Guid.Empty,
+			Name = app.Name ?? string.Empty,
+			Description = app.Description ?? string.Empty,
+			HomepageUrl = Uri.TryCreate(app.HomepageUrl, UriKind.Absolute, out var homepage) ? homepage : FallbackUri,
+			IconUrl = Uri.TryCreate(app.IconUrl, UriKind.Absolute, out var icon) ? icon : null,
+			RedirectUris = (app.RedirectUris ?? []).Select(uri => new Uri(uri, UriKind.Absolute)).ToArray(),
+			Scopes = app.Scopes?.ToArray() ?? Array.Empty<string>(),
+			TrustLevel = MapTrustLevel(app.TrustLevel?.ToString()),
+			ClientId = app.ClientId ?? string.Empty,
+			CreatedAt = DateTimeOffset.TryParse(app.CreatedAt, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var createdAt)
+				? createdAt
+				: DateTimeOffset.MinValue,
+			CreatedBy = createdByResolver(app.CreatedBy?.UpdateAppPostResponseMember1DataAppCreatedByMember1 is null
+				? null
+				: MapUserSummary(app.CreatedBy.UpdateAppPostResponseMember1DataAppCreatedByMember1)),
 		};
 
 	public static ProgramKeyMetadata MapProgramKey(ListPostResponseMember1_data_keys key, Func<UserSummary?, UserSummary> createdByResolver)
@@ -263,14 +401,21 @@ public static class ApiMappingExtensions
 			TotalSeconds = project.Time ?? 0,
 		};
 
-	public static Device MapDevice(GetDevicesPostResponseMember1_data_devices device)
+	public static Device MapDevice(GetDevicesGetResponseMember1_data_devices device)
 		=> new()
 		{
-			DeviceId = Guid.TryParse(device.Id, out var id) ? id : Guid.Empty,
+			DeviceId = device.Id ?? Guid.Empty,
 			Name = device.Name ?? string.Empty,
 		};
 
-	public static User MapUser(UserDetails details)
+	public static Device MapDevice(RegisterDevicePostResponseMember1_data_device device)
+		=> new()
+		{
+			DeviceId = device.Id ?? Guid.Empty,
+			Name = device.Name ?? string.Empty,
+		};
+
+	public static AppUser MapUser(UserDetails details)
 		=> new()
 		{
 			UserId = details.UserId,
@@ -284,13 +429,13 @@ public static class ApiMappingExtensions
 			SlackId = details.SlackId,
 		};
 
-	public static User MapUser(UserSummary summary)
+	public static AppUser MapUser(UserSummary summary)
 		=> new()
 		{
 			UserId = summary.UserId,
 			Handle = summary.Handle,
 			DisplayName = summary.DisplayName,
-			ProfilePictureUrl = summary.ProfilePictureUrl ?? new Uri("https://example.com", UriKind.Absolute),
+			ProfilePictureUrl = summary.ProfilePictureUrl ?? FallbackProfileUri,
 			Bio = string.Empty,
 			Urls = Array.Empty<Uri>(),
 			HackatimeId = null,
@@ -328,7 +473,7 @@ public static class ApiMappingExtensions
 			TotalUsers = data.TotalUsers ?? 0,
 		};
 
-	public static AdminListResponse MapAdminList(ListPostResponseMember1_data data)
+	public static AdminListResponse MapAdminList(Riverside.Elapsed.Admin.List.ListPostResponseMember1_data data)
 		=> new()
 		{
 			Entity = MapEntityType(data.Entity?.ToString()),
@@ -338,7 +483,7 @@ public static class ApiMappingExtensions
 			PageSize = data.PageSize ?? 0,
 		};
 
-	public static AdminUpdateResult MapAdminUpdateResult(UpdatePatchResponseMember1_data data)
+	public static AdminUpdateResult MapAdminUpdateResult(Riverside.Elapsed.Admin.Update.UpdatePatchResponseMember1_data data)
 		=> new()
 		{
 			Entity = MapEntityType(data.Entity?.ToString()),
@@ -380,12 +525,12 @@ public static class ApiMappingExtensions
 			_ => TrustLevel.Untrusted,
 		};
 
-	public static Visibility MapVisibility(string? visibility)
+	public static AppVisibility MapVisibility(string? visibility)
 		=> visibility?.ToUpperInvariant() switch
 		{
-			"PUBLIC" => Visibility.Public,
-			"FAILED_PROCESSING" => Visibility.FailedProcessing,
-			_ => Visibility.Unlisted,
+			"PUBLIC" => AppVisibility.Public,
+			"FAILED_PROCESSING" => AppVisibility.FailedProcessing,
+			_ => AppVisibility.Unlisted,
 		};
 
 	public static EntityType MapEntityType(string? entity)
@@ -399,12 +544,12 @@ public static class ApiMappingExtensions
 			_ => EntityType.User,
 		};
 
-	private static string GetString(IReadOnlyDictionary<string, UntypedNode> values, string key)
+	private static string GetString(IDictionary<string, UntypedNode> values, string key)
 		=> values.TryGetValue(key, out var node) && node is UntypedString untyped
 			? untyped.GetValue() ?? string.Empty
 			: string.Empty;
 
-	private static string? GetStringOrNull(IReadOnlyDictionary<string, UntypedNode> values, string key)
+	private static string? GetStringOrNull(IDictionary<string, UntypedNode> values, string key)
 	{
 		if (!values.TryGetValue(key, out var node))
 		{
@@ -419,12 +564,27 @@ public static class ApiMappingExtensions
 		return node is UntypedString untyped ? untyped.GetValue() : null;
 	}
 
-	private static long? GetLong(IReadOnlyDictionary<string, UntypedNode> values, string key)
-		=> values.TryGetValue(key, out var node) && node is UntypedInteger untyped
-			? untyped.GetValue()
-			: null;
+	private static long? GetLong(IDictionary<string, UntypedNode> values, string key)
+	{
+		if (!values.TryGetValue(key, out var node))
+		{
+			return null;
+		}
 
-	private static IReadOnlyList<string> GetStringArray(IReadOnlyDictionary<string, UntypedNode> values, string key)
+		if (node is UntypedInteger untypedInteger)
+		{
+			return untypedInteger.GetValue();
+		}
+
+		if (node is UntypedDouble untypedDouble)
+		{
+			return (long)untypedDouble.GetValue();
+		}
+
+		return null;
+	}
+
+	private static IReadOnlyList<string> GetStringArray(IDictionary<string, UntypedNode> values, string key)
 	{
 		if (!values.TryGetValue(key, out var node) || node is not UntypedArray array)
 		{

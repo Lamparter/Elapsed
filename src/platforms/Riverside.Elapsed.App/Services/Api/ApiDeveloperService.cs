@@ -87,11 +87,24 @@ public sealed class ApiDeveloperService(IApiClientFacade client, IApiUserService
 			Id = appId,
 		}, cancellationToken: cancellationToken), cancellationToken);
 
-		if (response?.RotateAppSecretPostResponseMember1?.Data?.App is { } app && response.RotateAppSecretPostResponseMember1.Data.ClientSecret is { } secret)
+		if (response?.RotateAppSecretPostResponseMember1?.Data?.ClientSecret is { } secret)
 		{
 			return ApiResult<OAuthAppSecret>.Success(new OAuthAppSecret
 			{
-				App = ApiMappingExtensions.MapDeveloperApp(app, ResolveCreatedBy),
+				App = new DeveloperApp
+				{
+					AppId = appId,
+					Name = string.Empty,
+					Description = string.Empty,
+					HomepageUrl = new Uri("https://example.com", UriKind.Absolute),
+					IconUrl = null,
+					RedirectUris = Array.Empty<Uri>(),
+					Scopes = Array.Empty<string>(),
+					TrustLevel = TrustLevel.Untrusted,
+					ClientId = string.Empty,
+					CreatedAt = DateTimeOffset.MinValue,
+					CreatedBy = null,
+				},
 				ClientSecret = secret,
 			});
 		}
@@ -128,9 +141,9 @@ public sealed class ApiDeveloperService(IApiClientFacade client, IApiUserService
 		return ApiResult<bool>.Failure(error);
 	}
 
-	public Task<User.User?> HydrateCreatedByAsync(User.UserSummary? createdBy, CancellationToken cancellationToken = default)
+	public Task<Riverside.Elapsed.App.Models.User.User?> HydrateCreatedByAsync(Riverside.Elapsed.App.Models.User.UserSummary? createdBy, CancellationToken cancellationToken = default)
 		=> userService.HydrateUserAsync(createdBy, cancellationToken);
 
-	private User.User? ResolveCreatedBy(User.UserSummary? summary)
+	private Riverside.Elapsed.App.Models.User.User? ResolveCreatedBy(Riverside.Elapsed.App.Models.User.UserSummary? summary)
 		=> summary is null ? null : ApiMappingExtensions.MapUser(summary);
 }

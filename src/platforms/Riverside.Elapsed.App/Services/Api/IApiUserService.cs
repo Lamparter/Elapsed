@@ -11,7 +11,7 @@ public interface IApiUserService
 	Task<ApiResult<IReadOnlyList<Device>>> GetDevicesAsync(CancellationToken cancellationToken = default);
 	Task<ApiResult<Device>> RegisterDeviceAsync(string name, CancellationToken cancellationToken = default);
 	Task<ApiResult<double>> GetTotalTimelapseTimeAsync(string? userId, CancellationToken cancellationToken = default);
-	Task<ApiResult<IReadOnlyList<Hackatime.HackatimeProject>>> GetHackatimeProjectsAsync(CancellationToken cancellationToken = default);
+	Task<ApiResult<IReadOnlyList<Riverside.Elapsed.App.Models.Hackatime.HackatimeProject>>> GetHackatimeProjectsAsync(CancellationToken cancellationToken = default);
 	Task<ApiResult<KeyRelayRequest?>> QueryKeyRelayRequestAsync(Guid callingDevice, CancellationToken cancellationToken = default);
 	Task<ApiResult<Guid?>> RequestKeyRelayAsync(Guid targetDevice, Guid callingDevice, CancellationToken cancellationToken = default);
 	Task<ApiResult<KeyRelayResult?>> ReceiveKeyRelayAsync(Guid exchangeId, CancellationToken cancellationToken = default);
@@ -19,5 +19,5 @@ public interface IApiUserService
 	Task<ApiResult<bool>> DenyKeyRelayAsync(Guid exchangeId, CancellationToken cancellationToken = default);
 	Task<ApiResult<bool>> EmitHeartbeatAsync(CancellationToken cancellationToken = default);
 	Task<ApiResult<bool>> SignOutAsync(CancellationToken cancellationToken = default);
-	Task<User?> HydrateUserAsync(UserSummary? summary, CancellationToken cancellationToken = default);
+	Task<Riverside.Elapsed.App.Models.User.User?> HydrateUserAsync(UserSummary? summary, CancellationToken cancellationToken = default);
 }
