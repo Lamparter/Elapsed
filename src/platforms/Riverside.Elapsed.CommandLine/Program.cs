@@ -142,7 +142,7 @@ public class Program
 		{
 			const string clientId = Constants.ClientId;
 			const string redirectUri = "http://localhost:8765/auth/callback";
-			const string scopes = "timelapse:read timelapse:write comment:write user:read user:write";
+			const string scopes = Constants.OAuthScopes;
 			
 			var baseUrl = LoadConfig().BaseUrl ?? Constants.Endpoint;
 
