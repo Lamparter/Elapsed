@@ -1,35 +1,52 @@
+using Riverside.Elapsed.App.Services.Auth;
+
 namespace Riverside.Elapsed.App.ViewModels;
 
 public partial class LoginViewModel : ObservableObject
 {
-	private IAuthenticationService _authentication;
+	private readonly INavigator _navigator;
+	private readonly ILapseAuthService _authService;
 
-	private INavigator _navigator;
+	[ObservableProperty]
+	private bool _isWorking;
 
-	private IDispatcher _dispatcher;
+	[ObservableProperty]
+	private string? _message;
 
-
-	public LoginViewModel(
-		IDispatcher dispatcher,
-		INavigator navigator,
-		IAuthenticationService authentication)
+	public LoginViewModel(INavigator navigator, ILapseAuthService authService)
 	{
-		_dispatcher = dispatcher;
 		_navigator = navigator;
-		_authentication = authentication;
-		Login = new AsyncRelayCommand(DoLogin);
+		_authService = authService;
+		LoginCommand = new AsyncRelayCommand(LoginAsync);
 	}
 
-	private async Task DoLogin()
+	public string Title => "Sign in";
+
+	public string Description => "Authenticate with Lapse to continue.";
+
+	public IAsyncRelayCommand LoginCommand { get; }
+
+	private async Task LoginAsync()
 	{
-		var success = await _authentication.LoginAsync(_dispatcher);
-		if (success)
+		IsWorking = true;
+		Message = null;
+		try
 		{
-			await _navigator.NavigateViewModelAsync<MainViewModel>(this, qualifier: Qualifiers.ClearBackStack);
+			var result = await _authService.LoginAsync();
+			if (result.IsSuccess)
+			{
+				await _navigator.NavigateViewModelAsync<MainViewModel>(this, qualifier: Qualifiers.ClearBackStack);
+				return;
+			}
+
+			if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+			{
+				Message = result.ErrorMessage;
+			}
+		}
+		finally
+		{
+			IsWorking = false;
 		}
 	}
-
-	public string Title { get; } = "Login";
-
-	public ICommand Login { get; }
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Riverside.Elapsed.App.Models.Auth;
 using Riverside.Elapsed.App.Services.Api;
@@ -44,6 +45,8 @@ public sealed class LapseAuthService(IAuthTokenStore tokenStore) : ILapseAuthSer
 #if __WASM__
 		await BeginWebLoginAsync();
 		return ApiResult<bool>.Failure(string.Empty);
+#elif __ANDROID__ || __IOS__
+		return ApiResult<bool>.Failure("Native mobile login is not implemented in v0.");
 #else
 		return await LoginDesktopAsync(cancellationToken);
 #endif
@@ -70,8 +73,7 @@ public sealed class LapseAuthService(IAuthTokenStore tokenStore) : ILapseAuthSer
 		var state = GenerateRandomString(32);
 		var authorizeUrl = BuildAuthorizeUrl(DesktopRedirectUri, state, codeChallenge);
 
-		var launched = await Windows.System.Launcher.LaunchUriAsync(new Uri(authorizeUrl, UriKind.Absolute));
-		if (!launched)
+		if (!OpenBrowser(authorizeUrl))
 		{
 			return ApiResult<bool>.Failure("Could not open the browser for authentication.");
 		}
@@ -102,12 +104,13 @@ public sealed class LapseAuthService(IAuthTokenStore tokenStore) : ILapseAuthSer
 				return ApiResult<bool>.Failure("Invalid callback received from the authentication server.");
 			}
 
-			var tokenResult = await ExchangeCodeForTokenAsync(code, codeVerifier, DesktopRedirectUri, cancellationToken);
-			if (!tokenResult.IsSuccess || tokenResult.Value is null)
-			{
-				await WriteListenerResponseAsync(response, 400, tokenResult.ErrorMessage);
-				return ApiResult<bool>.Failure(tokenResult.ErrorMessage);
-			}
+		var tokenResult = await ExchangeCodeForTokenAsync(code, codeVerifier, DesktopRedirectUri, cancellationToken);
+		if (!tokenResult.IsSuccess || tokenResult.Value is null)
+		{
+			var message = tokenResult.ErrorMessage ?? "Authentication failed during token exchange.";
+			await WriteListenerResponseAsync(response, 400, message);
+			return ApiResult<bool>.Failure(message);
+		}
 
 			await tokenStore.SetTokenAsync(tokenResult.Value, cancellationToken);
 			await WriteListenerResponseAsync(response, 200, "Authentication successful. You can close this tab now.");
@@ -132,7 +135,7 @@ public sealed class LapseAuthService(IAuthTokenStore tokenStore) : ILapseAuthSer
 			Code = code,
 			RedirectUri = redirectUri,
 			CodeVerifier = codeVerifier,
-			GrantType = "authorization_code",
+			GrantType = new UntypedString("authorization_code"),
 		}, cancellationToken: cancellationToken);
 
 		if (string.IsNullOrWhiteSpace(response?.AccessToken))
@@ -140,12 +143,14 @@ public sealed class LapseAuthService(IAuthTokenStore tokenStore) : ILapseAuthSer
 			return ApiResult<OAuthToken>.Failure("Token exchange failed: no access token returned by the server.");
 		}
 
+		var scope = response.Scope is UntypedString scopeString ? scopeString.Value : Riverside.Elapsed.Constants.OAuthScopes;
+
 		return ApiResult<OAuthToken>.Success(new OAuthToken
 		{
 			AccessToken = response.AccessToken,
 			RefreshToken = response.RefreshToken,
 			ExpiresIn = response.ExpiresIn ?? 0,
-			Scope = response.Scope ?? Riverside.Elapsed.Constants.OAuthScopes,
+			Scope = scope,
 			TokenType = response.TokenType ?? "bearer",
 		});
 	}
@@ -193,6 +198,39 @@ public sealed class LapseAuthService(IAuthTokenStore tokenStore) : ILapseAuthSer
 		}
 
 		return new string(result);
+	}
+
+	private static bool OpenBrowser(string url)
+	{
+		try
+		{
+			if (OperatingSystem.IsWindows())
+			{
+				System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+				{
+					FileName = url,
+					UseShellExecute = true,
+				});
+				return true;
+			}
+
+			if (OperatingSystem.IsMacOS())
+			{
+				System.Diagnostics.Process.Start("open", url);
+				return true;
+			}
+
+			if (OperatingSystem.IsLinux())
+			{
+				System.Diagnostics.Process.Start("xdg-open", url);
+				return true;
+			}
+		}
+		catch
+		{
+		}
+
+		return false;
 	}
 
 #if __WASM__

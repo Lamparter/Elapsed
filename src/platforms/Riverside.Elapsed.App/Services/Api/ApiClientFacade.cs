@@ -1,3 +1,4 @@
+using Microsoft.Kiota.Abstractions.Authentication;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Riverside.Elapsed.App.Services.Auth;
 
@@ -7,7 +8,7 @@ public sealed class ApiClientFacade(IAuthTokenStore tokenStore) : IApiClientFaca
 {
 	public Task<T?> SendAsync<T>(Func<ApiClient, Task<T?>> call, CancellationToken cancellationToken = default)
 	{
-		var authProvider = string.IsNullOrWhiteSpace(tokenStore.AccessToken)
+		IAuthenticationProvider authProvider = string.IsNullOrWhiteSpace(tokenStore.AccessToken)
 			? new NoAuthProvider()
 			: new StaticBearerAuthProvider(tokenStore.AccessToken);
 

@@ -1,7 +1,8 @@
-﻿<Application
+<Application
 	x:Class="Riverside.Elapsed.App.App"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:converters="using:Riverside.Elapsed.App.Converters">
 
 	<Application.Resources>
 		<ResourceDictionary>
@@ -13,7 +14,8 @@
 			</ResourceDictionary.MergedDictionaries>
 
 			<!-- Add resources here -->
-
+			<converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+			<converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
 		</ResourceDictionary>
 	</Application.Resources>
 

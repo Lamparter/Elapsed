@@ -129,6 +129,6 @@ public sealed partial class DraftsViewModel : ObservableObject
 	{
 		return _navigator.NavigateViewModelAsync<DraftDetailsViewModel>(
 			this,
-			data: new DraftItem(localDraftId));
+			data: new DraftListItem(localDraftId));
 	}
 }

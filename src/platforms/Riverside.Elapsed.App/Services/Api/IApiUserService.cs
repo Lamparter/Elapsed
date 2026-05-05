@@ -1,4 +1,5 @@
 using Riverside.Elapsed.App.Models.User;
+using Riverside.Elapsed.App.Models.User.Local;
 
 namespace Riverside.Elapsed.App.Services.Api;
 

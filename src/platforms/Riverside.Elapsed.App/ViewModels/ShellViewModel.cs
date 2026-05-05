@@ -1,22 +1,18 @@
+using Riverside.Elapsed.App.Services.Auth;
+
 namespace Riverside.Elapsed.App.ViewModels;
 
-public class ShellViewModel
+public sealed class ShellViewModel
 {
-	private readonly IAuthenticationService _authentication;
-
-
 	private readonly INavigator _navigator;
 
-	public ShellViewModel(
-		IAuthenticationService authentication,
-		INavigator navigator)
+	public ShellViewModel(ILapseAuthService authService, INavigator navigator)
 	{
 		_navigator = navigator;
-		_authentication = authentication;
-		_authentication.LoggedOut += LoggedOut;
+		authService.LoggedOut += OnLoggedOut;
 	}
 
-	private async void LoggedOut(object? sender, EventArgs e)
+	private async void OnLoggedOut(object? sender, EventArgs e)
 	{
 		await _navigator.NavigateViewModelAsync<LoginViewModel>(this, qualifier: Qualifiers.ClearBackStack);
 	}

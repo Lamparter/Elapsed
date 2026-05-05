@@ -25,6 +25,8 @@
 			ThemeService;
 			SkiaRenderer;
 		</UnoFeatures>
+
+		<BuildTimestampIso>$([System.DateTime]::Now.ToString("O"))</BuildTimestampIso>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -34,5 +36,33 @@
 	<ItemGroup>
 		<ProjectReference Include="$(SharedDirectory)\Riverside.Elapsed\Riverside.Elapsed.csproj" />
 	</ItemGroup>
+
+	<Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
+		<PropertyGroup>
+			<GeneratedBuildInfoFile>$(IntermediateOutputPath)Generated\BuildInfo.g.cs</GeneratedBuildInfoFile>
+		</PropertyGroup>
+
+		<MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(GeneratedBuildInfoFile)'))" />
+
+		<ItemGroup>
+			<_BuildInfoLines Include="namespace Riverside.Elapsed.App.Services.Build" />
+			<_BuildInfoLines Include="{" />
+			<_BuildInfoLines Include="&#x9;internal static class BuildInfoGenerated" />
+			<_BuildInfoLines Include="&#x9;{" />
+			<_BuildInfoLines Include="&#x9;&#x9;internal const string DisplayVersion = &quot;$(DisplayVersion)&quot;%3B" />
+			<_BuildInfoLines Include="&#x9;&#x9;internal const string BuildTimestampIso = &quot;$(BuildTimestampIso)&quot;%3B" />
+			<_BuildInfoLines Include="&#x9;}" />
+			<_BuildInfoLines Include="}" />
+		</ItemGroup>
+
+		<WriteLinesToFile
+			File="$(GeneratedBuildInfoFile)"
+			Overwrite="true"
+			Lines="@(_BuildInfoLines)" />
+
+		<ItemGroup>
+			<Compile Include="$(GeneratedBuildInfoFile)" />
+		</ItemGroup>
+	</Target>
 
 </Project>

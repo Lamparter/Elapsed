@@ -1,121 +1,85 @@
 using System.Diagnostics.CodeAnalysis;
-using Uno.Resizetizer;
-using Riverside.Elapsed;
-using Riverside.Elapsed.App.ViewModels;
 using Riverside.Elapsed.App.Extensions;
-using Riverside.Elapsed.App.ViewModels.Timelapses.Drafts;
+using Riverside.Elapsed.App.Services.Api;
+using Riverside.Elapsed.App.Services.Auth;
+using Riverside.Elapsed.App.Services.Build;
+using Riverside.Elapsed.App.Services.Storage;
+using Riverside.Elapsed.App.ViewModels;
+using Uno.Resizetizer;
 
 namespace Riverside.Elapsed.App;
 
 public partial class App : Application
 {
-	/// <summary>
-	/// Initializes the singleton application object. This is the first line of authored code
-	/// executed, and as such is the logical equivalent of main() or WinMain().
-	/// </summary>
 	public App()
 	{
-		this.InitializeComponent();
+		InitializeComponent();
 	}
 
 	protected Window? MainWindow { get; private set; }
 	protected IHost? Host { get; private set; }
 
-	[SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Uno.Extensions APIs are used in a way that is safe for trimming in this template context.")]
-	protected async override void OnLaunched(LaunchActivatedEventArgs args)
+	[SuppressMessage("Trimming", "IL2026", Justification = "Uno app builder usage is trim-safe for configured features.")]
+	protected override async void OnLaunched(LaunchActivatedEventArgs args)
 	{
 		var builder = this.CreateBuilder(args)
-			// Add navigation support for toolkit controls such as TabBar and NavigationView
 			.UseToolkitNavigation()
 			.Configure(host => host
 #if DEBUG
-				// Switch to Development environment when running in DEBUG
 				.UseEnvironment(Environments.Development)
 #endif
-				.UseLogging(configure: (context, logBuilder) =>
+				.UseLogging((context, logBuilder) =>
 				{
-					// Configure log levels for different categories of logging
 					logBuilder
-						.SetMinimumLevel(
-							context.HostingEnvironment.IsDevelopment() ?
-								LogLevel.Information :
-								LogLevel.Warning)
-
-						// Default filters for core Uno Platform namespaces
+						.SetMinimumLevel(context.HostingEnvironment.IsDevelopment() ? LogLevel.Information : LogLevel.Warning)
 						.CoreLogLevel(LogLevel.Warning);
-
-					// Uno Platform namespace filter groups
-					// Uncomment individual methods to see more detailed logging
-					//// Generic Xaml events
-					//logBuilder.XamlLogLevel(LogLevel.Debug);
-					//// Layout specific messages
-					//logBuilder.XamlLayoutLogLevel(LogLevel.Debug);
-					//// Storage messages
-					//logBuilder.StorageLogLevel(LogLevel.Debug);
-					//// Binding related messages
-					//logBuilder.XamlBindingLogLevel(LogLevel.Debug);
-					//// Binder memory references tracking
-					//logBuilder.BinderMemoryReferenceLogLevel(LogLevel.Debug);
-					//// DevServer and HotReload related
-					//logBuilder.HotReloadCoreLogLevel(LogLevel.Information);
-					//// Debug JS interop
-					//logBuilder.WebAssemblyLogLevel(LogLevel.Debug);
-
 				}, enableUnoLogging: true)
 				.UseSerilog(consoleLoggingEnabled: true, fileLoggingEnabled: true)
-				.UseConfiguration(configure: configBuilder =>
-					configBuilder
-						.EmbeddedSource<App>()
-						.Section<AppConfig>()
-				)
-				// Enable localization (see appsettings.json for supported languages)
-				.UseLocalization()
-				.UseHttp((context, services) =>
+				.UseConfiguration(configBuilder =>
 				{
-#if DEBUG
-					// DelegatingHandler will be automatically injected
-					services.AddTransient<DelegatingHandler, DebugHttpHandler>();
-#endif
-					services.AddKiotaClient<ApiClient>(
-						context
-					);
+					configBuilder.Sources.EmbeddedSource<App>();
+					configBuilder.Sources.Section<AppConfig>();
 				})
-				.UseAuthentication(auth =>
-					auth.AddWeb(name: "WebAuthentication")
-				)
+				.UseLocalization()
 				.ConfigureServices((context, services) =>
 				{
-					// TODO: Register your services
-					//services.AddSingleton<IMyService, MyService>();
+#if DEBUG
+					services.AddTransient<DelegatingHandler, DebugHttpHandler>();
+#endif
+					services.AddSingleton<ILocalJsonStore, LocalJsonStore>();
+					services.AddSingleton<IAuthTokenStore, AuthTokenStore>();
+					services.AddSingleton<ILapseAuthService, LapseAuthService>();
+					services.AddSingleton<IBuildInfoProvider, BuildInfoProvider>();
+
+					services.AddScoped<IApiClientFacade, ApiClientFacade>();
+					services.AddScoped<IApiUserService, ApiUserService>();
+					services.AddScoped<IApiGlobalService, ApiGlobalService>();
+					services.AddScoped<IApiDeveloperService, ApiDeveloperService>();
+
 					services.AddDrafts();
 				})
 				.UseNavigation(RegisterRoutes)
-				.UseSerialization(serialization =>
-				{
-					serialization.AddSingleton(Constants.SerializerOptions);
-				})
+				.UseSerialization(serialization => serialization.AddSingleton(Constants.SerializerOptions))
 			);
-		MainWindow = builder.Window;
 
+		MainWindow = builder.Window;
 #if DEBUG
 		MainWindow.UseStudio();
 #endif
 		MainWindow.SetWindowIcon();
 
-		Host = await builder.NavigateAsync<Shell>
-			(initialNavigate: async (services, navigator) =>
+		Host = await builder.NavigateAsync<Shell>(initialNavigate: async (services, navigator) =>
+		{
+			var authService = services.GetRequiredService<ILapseAuthService>();
+			var isAuthenticated = await authService.TryRestoreSessionAsync();
+			if (isAuthenticated)
 			{
-				var auth = services.GetRequiredService<IAuthenticationService>();
-				var authenticated = await auth.RefreshAsync();
-				if (authenticated)
-				{
-					await navigator.NavigateViewModelAsync<MainViewModel>(this, qualifier: Qualifiers.Nested);
-				}
-				else
-				{
-					await navigator.NavigateViewModelAsync<LoginViewModel>(this, qualifier: Qualifiers.Nested);
-				}
-			});
+				await navigator.NavigateViewModelAsync<MainViewModel>(this, qualifier: Qualifiers.Nested);
+				return;
+			}
+
+			await navigator.NavigateViewModelAsync<LoginViewModel>(this, qualifier: Qualifiers.Nested);
+		});
 	}
 
 	private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
@@ -124,22 +88,20 @@ public partial class App : Application
 			new ViewMap(ViewModel: typeof(ShellViewModel)),
 			new ViewMap<LoginPage, LoginViewModel>(),
 			new ViewMap<MainPage, MainViewModel>(),
-			new DataViewMap<SecondPage, SecondViewModel, Entity>(),
-
-			new ViewMap<DraftsPage, DraftsViewModel>(),
-			new DataViewMap<DraftDetailsPage, DraftDetailsViewModel, DraftListItem>(),
+			new ViewMap<VideoPage, VideoViewModel>(),
+			new ViewMap<RecordingPage, RecordingViewModel>()
 		);
 
 		routes.Register(
-			new RouteMap("", View: views.FindByViewModel<ShellViewModel>(),
+			new RouteMap(
+				"",
+				View: views.FindByViewModel<ShellViewModel>(),
 				Nested:
 				[
-					new("Login", View: views.FindByViewModel<LoginViewModel>()),
-					new("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault:true),
-					new("Second", View: views.FindByViewModel<SecondViewModel>()),
-
-					new("Drafts", View: views.FindByViewModel<DraftsViewModel>()),
-					new("Draft", View: views.FindByViewModel<DraftDetailsViewModel>()),
+					new RouteMap("Login", View: views.FindByViewModel<LoginViewModel>()),
+					new RouteMap("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault: true),
+					new RouteMap("Video", View: views.FindByViewModel<VideoViewModel>()),
+					new RouteMap("Recording", View: views.FindByViewModel<RecordingViewModel>()),
 				]
 			)
 		);

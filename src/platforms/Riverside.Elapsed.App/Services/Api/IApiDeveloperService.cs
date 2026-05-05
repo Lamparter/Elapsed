@@ -11,5 +11,7 @@ public interface IApiDeveloperService
 	Task<ApiResult<OAuthAppSecret>> RotateAppSecretAsync(Guid appId, CancellationToken cancellationToken = default);
 	Task<ApiResult<IReadOnlyList<OAuthGrant>>> GetOwnedGrantsAsync(CancellationToken cancellationToken = default);
 	Task<ApiResult<bool>> RevokeGrantAsync(string grantId, CancellationToken cancellationToken = default);
-	Task<User.User?> HydrateCreatedByAsync(User.UserSummary? createdBy, CancellationToken cancellationToken = default);
+	Task<Riverside.Elapsed.App.Models.User.User?> HydrateCreatedByAsync(
+		Riverside.Elapsed.App.Models.User.UserSummary? createdBy,
+		CancellationToken cancellationToken = default);
 }

@@ -1,16 +1,16 @@
 namespace Riverside.Elapsed.App.Presentation;
 
-public sealed partial class MainPage : Page
+public sealed partial class VideoPage : Page
 {
-	public MainPage()
+	public VideoPage()
 	{
 		this.InitializeComponent();
-		this.Loaded += OnLoaded;
+		Loaded += OnLoaded;
 	}
 
 	private async void OnLoaded(object sender, RoutedEventArgs e)
 	{
-		if (DataContext is ViewModels.MainViewModel vm)
+		if (DataContext is ViewModels.VideoViewModel vm)
 		{
 			await vm.InitializeAsync();
 		}
